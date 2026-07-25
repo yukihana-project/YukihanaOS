@@ -14,7 +14,7 @@ internal static class ValidateHandler
         ConfigManager.LoadConfigs();
 
         string[] manifestFeatureIds = [.. ConfigManager.ManifestConfig!.Feature.Select(f => f.Id)];
-        foreach((string preset, PresetConfig cfg) in ConfigManager.PresetConfigs)
+        foreach ((string preset, PresetConfig cfg) in ConfigManager.PresetConfigs)
         {
             Log.Verbose("Valdating '{PresetName}'.", preset);
 
@@ -23,7 +23,7 @@ internal static class ValidateHandler
             if (unknown.Length > 0)
             {
                 Log.Fatal("Unknown features id found while validating '{PresetName}': ", preset);
-                foreach(string feat in unknown)
+                foreach (string feat in unknown)
                 {
                     Log.Fatal("  {FeatureId}", feat);
                 }

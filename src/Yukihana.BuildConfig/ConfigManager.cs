@@ -32,7 +32,7 @@ internal static class ConfigManager
                 ManifestConfig = TomlSerializer.Deserialize<ManifestConfig>(fs, ManifestConfigContext.Default);
             }
 
-            foreach(string file in Directory.GetFiles(Globals.ConfigsDirectoryPath))
+            foreach (string file in Directory.GetFiles(Globals.ConfigsDirectoryPath))
             {
                 using (FileStream fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
                 {

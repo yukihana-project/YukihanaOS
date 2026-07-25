@@ -34,7 +34,7 @@ internal static class MainPage
             .PageSize(5)
             .WrapAround()
             .AddChoices(options));
-        
+
         switch (option)
         {
             case "Configure Features":

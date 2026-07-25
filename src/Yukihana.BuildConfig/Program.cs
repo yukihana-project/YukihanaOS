@@ -22,7 +22,7 @@ internal class Program
         {
             RootCommandHandler.Handle(result);
 
-            return  inner(result);
+            return inner(result);
         };
     }
 
@@ -61,7 +61,7 @@ internal class Program
 
         Globals.Args.EnableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleEnable));
         Globals.Args.DisableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleDisable));
-        
+
         Globals.Args.InfoCommand.SetAction(Wrap(InfoCommandHandler.Handle));
         // TODO: graph handler
         Globals.Args.InitCommand.SetAction(Wrap(InitCommandHandler.Handle));
@@ -73,7 +73,7 @@ internal class Program
                 .Where(or => or.Option == Globals.Args.VerboseOption ||
                             or.Option == Globals.Args.QuietOption)
                 .ToList();
-            
+
             if (options.Count == 0)
             {
                 return;

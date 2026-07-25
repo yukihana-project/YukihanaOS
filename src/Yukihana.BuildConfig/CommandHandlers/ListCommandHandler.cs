@@ -20,19 +20,19 @@ internal static class ListCommandHandler
             return 1;
         }
 
-        switch(arg)
+        switch (arg)
         {
             case "features":
                 ConfigManager.LoadConfigs(false);
                 string[] features = [.. ConfigManager.ManifestConfig!.Feature.Select(s => $"id: {s.Id}; name: {s.Name}")];
-                
+
                 if (features.Length == 0)
                 {
                     Log.Information("(No features are defined)");
                     break;
                 }
-                
-                foreach(string feature in features)
+
+                foreach (string feature in features)
                 {
                     Log.Information(feature);
                 }
@@ -41,14 +41,14 @@ internal static class ListCommandHandler
             case "groups":
                 ConfigManager.LoadConfigs(false);
                 string[] groups = [.. ConfigManager.ManifestConfig!.Group.Select(s => $"id: {s.Id}; name: {s.Name}")];
-                
+
                 if (groups.Length == 0)
                 {
                     Log.Information("(No groups are defined)");
                     break;
                 }
-                
-                foreach(string group in groups)
+
+                foreach (string group in groups)
                 {
                     Log.Information(group);
                 }
@@ -57,14 +57,14 @@ internal static class ListCommandHandler
             case "presets":
                 ConfigManager.LoadConfigs(false);
                 string[] presets = [.. Directory.EnumerateFiles(Globals.ConfigsDirectoryPath).Select(s => Path.GetFileNameWithoutExtension(s))];
-                
+
                 if (presets.Length == 0)
                 {
                     Log.Information("(No presets are present)");
                     break;
                 }
-                
-                foreach(string preset in presets)
+
+                foreach (string preset in presets)
                 {
                     Log.Information(preset);
                 }
@@ -73,14 +73,14 @@ internal static class ListCommandHandler
             case "enabled":
                 ConfigManager.LoadConfigs(true);
                 string[] enabledFeatures = [.. ConfigManager.CurrentConfig!.Enabled ?? []];
-                
+
                 if (enabledFeatures.Length == 0)
                 {
                     Log.Information("(No features are enabled)");
                     break;
                 }
 
-                foreach(string enabled in enabledFeatures)
+                foreach (string enabled in enabledFeatures)
                 {
                     Log.Information(enabled);
                 }
@@ -92,14 +92,14 @@ internal static class ListCommandHandler
                 List<ManifestConfig.FeatureConfig> featureCollection = ConfigManager.ManifestConfig!.Feature ?? [];
 
                 string[] disabledFeatures = [.. featureCollection.Select(f => f.Id).Where(f => ConfigManager.CurrentConfig!.Enabled!.Contains(f))];
-                
+
                 if (disabledFeatures.Length == 0)
                 {
                     Log.Information("(No features are disabled)");
                     break;
                 }
 
-                foreach(string disabled in disabledFeatures)
+                foreach (string disabled in disabledFeatures)
                 {
                     Log.Information(disabled);
                 }

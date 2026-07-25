@@ -19,9 +19,9 @@ internal static class ConfigPage
 
         GroupNode? node = null;
 
-        while(true)
+        while (true)
         {
-            node = Process(tree, node, featureStates);;
+            node = Process(tree, node, featureStates); ;
         }
     }
 
@@ -61,9 +61,9 @@ internal static class ConfigPage
             .EnableSearch()
             .PageSize(15)
             .MoreChoicesText("[gray](More items available)[/]")
-            .AddChoiceGroup("Config", [..groupNames, .. featureNames])
+            .AddChoiceGroup("Config", [.. groupNames, .. featureNames])
             .AddChoiceGroup("Commands", [Back, Save, Exit]));
-        
+
         switch (selected)
         {
             case Back:
@@ -86,7 +86,7 @@ internal static class ConfigPage
                 Environment.Exit(0);
                 break;
         }
-        
+
         if (groupNames.Contains(selected))
         {
             string toEnter = new([.. groupNames[groupNames.IndexOf(selected)].Skip(4)]);

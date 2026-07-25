@@ -52,7 +52,7 @@ internal static class PresetCommandHandler
         Log.Information("Description: {PresetDescription}", cfg.Description);
         Log.Information("Enabled:");
 
-        foreach(string enabled in cfg.Enabled)
+        foreach (string enabled in cfg.Enabled)
         {
             Log.Information("  {EnabledFeature}", enabled);
         }

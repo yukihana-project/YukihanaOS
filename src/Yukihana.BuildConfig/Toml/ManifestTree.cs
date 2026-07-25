@@ -18,11 +18,15 @@ internal sealed class ManifestTree
         foreach (var g in groups)
         {
             if (g.Children.Contains(target))
+            {
                 return g;
+            }
 
             var parent = FindParent(g.Children, target);
             if (parent != null)
+            {
                 return parent;
+            }
         }
         return null;
     }
@@ -32,7 +36,9 @@ internal sealed class ManifestTree
         ArgumentNullException.ThrowIfNull(node);
 
         if (!TryGetPath(RootGroups, node, static n => n.Group.Name, out var path))
+        {
             throw new InvalidOperationException("Node does not belong to the tree.");
+        }
 
         return string.Join(" -> ", path);
     }
@@ -42,7 +48,9 @@ internal sealed class ManifestTree
         ArgumentNullException.ThrowIfNull(node);
 
         if (!TryGetPath(RootGroups, node, static n => n.Group.Id, out var path))
+        {
             throw new InvalidOperationException("Node does not belong to the tree.");
+        }
 
         return string.Join("/", path);
     }
@@ -51,7 +59,9 @@ internal sealed class ManifestTree
     {
 
         if (string.IsNullOrWhiteSpace(idPath))
+        {
             return null;
+        }
 
         var parts = idPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
 
@@ -63,7 +73,9 @@ internal sealed class ManifestTree
             current = currentLevel.FirstOrDefault(x => x.Group.Id == id);
 
             if (current is null)
+            {
                 return null;
+            }
 
             currentLevel = current.Children;
         }
@@ -82,7 +94,9 @@ internal sealed class ManifestTree
             path = [];
 
             if (TryGetPath(node, target, selector, path))
+            {
                 return true;
+            }
         }
 
         path = [];
@@ -98,12 +112,16 @@ internal sealed class ManifestTree
         path.Add(selector(current));
 
         if (ReferenceEquals(current, target))
+        {
             return true;
+        }
 
         foreach (var child in current.Children)
         {
             if (TryGetPath(child, target, selector, path))
+            {
                 return true;
+            }
         }
 
         path.RemoveAt(path.Count - 1);
@@ -120,20 +138,28 @@ internal sealed class ManifestTree
         var visiting = new HashSet<string>();
 
         foreach (var feature in features.Values)
+        {
             Evaluate(feature.Id);
+        }
 
         return result;
 
         bool Evaluate(string id)
         {
             if (result.TryGetValue(id, out var enabled))
+            {
                 return enabled;
+            }
 
             if (!features.TryGetValue(id, out var feature))
+            {
                 return false;
+            }
 
             if (!visiting.Add(id))
+            {
                 throw new InvalidOperationException($"Circular dependency detected involving '{id}'.");
+            }
 
             enabled = feature.EnabledByDefault ?? false;
 
@@ -174,19 +200,25 @@ internal sealed class ManifestTree
         foreach (var root in tree.RootGroups)
         {
             foreach (var feature in EnumerateFeatures(root))
+            {
                 yield return feature;
+            }
         }
     }
 
     private static IEnumerable<ManifestConfig.FeatureConfig> EnumerateFeatures(GroupNode node)
     {
         foreach (var feature in node.Features)
+        {
             yield return feature;
+        }
 
         foreach (var child in node.Children)
         {
             foreach (var feature in EnumerateFeatures(child))
+            {
                 yield return feature;
+            }
         }
     }
 }
@@ -212,7 +244,7 @@ internal static class ManifestTreeBuilder
             {
                 Group = g
             });
-        
+
         foreach (GroupNode? node in groups.Values)
         {
             if (string.IsNullOrWhiteSpace(node.Group.Parent))
