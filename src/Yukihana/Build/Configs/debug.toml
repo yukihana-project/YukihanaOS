@@ -1,0 +1,6 @@
+description = "Debug configuration"
+
+enabled = [
+    "initramfs",
+    "sinks.serial"
+]
