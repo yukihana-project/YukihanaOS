@@ -138,16 +138,17 @@ internal static class Globals
             PresetInteractionArgument
         };
 
-        public static Command ApplySubcommand { get; set; } = new("apply", "Apply changes to specified preset.")
-        {
-            PresetInteractionArgument
-        };
+        // This will be delayed
+        //public static Command ApplySubcommand { get; set; } = new("apply", "Apply changes to specified preset.")
+        //{
+        //    PresetInteractionArgument
+        //};
 
         public static Command PresetCommand { get; set; } = new("preset", "Manage presets.")
         {
             ListSubcommand,
             ShowSubcommand,
-            ApplySubcommand
+            //ApplySubcommand
         };
 
         #endregion

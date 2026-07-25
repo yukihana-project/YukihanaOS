@@ -55,16 +55,16 @@ internal class Program
         Globals.Args.ConfigsPathOption.DefaultValueFactory = _ => "./Build/Configs/";
         Globals.Args.ManifestPathOption.DefaultValueFactory = _ => "./Build/Manifest.toml";
 
-        // configure handler
+        Globals.Args.ConfigureCommand.SetAction(Wrap(ConfigureManager.Handle));
         Globals.Args.MenuCommand.SetAction(Wrap(MenuCommandHandler.Handle));
         // check handler
         Globals.Args.ValidateCommand.SetAction(Wrap(ValidateHandler.Handle));
         // clean handler
         Globals.Args.ListCommand.SetAction(Wrap(ListCommandHandler.Handle));
-        // preset handler
-        // feature handler
-        // info handler
-        // graph handler
+        // TODO: preset handler
+        // TODO: feature handler
+        // TODO: info handler
+        // TODO: graph handler
         Globals.Args.InitCommand.SetAction(Wrap(InitCommandHandler.Handle));
 
         Globals.Args.RootCmd.Validators.Add(result =>
