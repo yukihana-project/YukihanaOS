@@ -12,7 +12,7 @@ internal static class PresetCommandHandler
 {
     public static int HandleList(ParseResult result)
     {
-        string[] files = [.. Directory.EnumerateDirectories(Globals.ConfigsDirectoryPath).Select(f => Path.GetFileNameWithoutExtension(f))];
+        string[] files = [.. Directory.EnumerateFiles(Globals.ConfigsDirectoryPath).Select(f => Path.GetFileNameWithoutExtension(f))];
 
         foreach (string file in files)
         {
