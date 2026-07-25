@@ -16,6 +16,16 @@ internal class Program
 {
     private const string MUTUAL_EXCLUSIVE_MSG = "Mutually exclusive options used. Use either '{0}' or '{1}'";
 
+    private static Func<ParseResult, int> Wrap(Func<ParseResult, int> inner)
+    {
+        return result =>
+        {
+            RootCommandHandler.Handle(result);
+
+            return  inner(result);
+        };
+    }
+
     private static int Main(string[] args)
     {
         Log.Logger = new LoggerConfiguration()
@@ -37,18 +47,17 @@ internal class Program
         Globals.Args.ConfigsPathOption.DefaultValueFactory = _ => "./Build/Configs/";
         Globals.Args.ManifestPathOption.DefaultValueFactory = _ => "./Build/Manifest.toml";
 
-        Globals.Args.RootCmd.SetAction(RootCommandHandler.Handle);
         // configure handler
-        Globals.Args.MenuCommand.SetAction(MenuCommandHandler.Handle);
+        Globals.Args.MenuCommand.SetAction(Wrap(MenuCommandHandler.Handle));
         // check handler
-        // validate handler
+        Globals.Args.ValidateCommand.SetAction(Wrap(ValidateHandler.Handle));
         // clean handler
         // list handler
         // preset handler
         // feature handler
         // info handler
         // graph handler
-        Globals.Args.InitCommand.SetAction(InitCommandHandler.Handle);
+        Globals.Args.InitCommand.SetAction(Wrap(InitCommandHandler.Handle));
 
         Globals.Args.RootCmd.Validators.Add(result =>
         {

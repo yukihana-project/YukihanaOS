@@ -55,6 +55,8 @@ internal static class ConfigureManager
 
         TomlSerializer.Serialize(fs, newCurrent, CurrentConfigContext.Default);
 
+        // TODO: Genertate configs
+
         return 0;
     }
 }
