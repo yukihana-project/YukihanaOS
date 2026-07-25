@@ -118,19 +118,11 @@ internal static class Globals
 
         #region 'list' command
 
-        public static Option<bool> FeaturesOption { get; set; } = new("--features");
-        public static Option<bool> GroupsOption { get; set; } = new("--groups");
-        public static Option<bool> PresetsOption { get; set; } = new("--presets");
-        public static Option<bool> EnabledOption { get; set; } = new("--enabled");
-        public static Option<bool> FisabledOption { get; set; } = new("--disabled");
+        public static Argument<string> listArgumnet { get; set; } = new("type");
 
         public static Command ListCommand { get; set; } = new("list", "Show information.")
         {
-            FeaturesOption,
-            GroupsOption,
-            PresetsOption,
-            EnabledOption,
-            FisabledOption
+            listArgumnet
         };
 
         #endregion

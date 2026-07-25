@@ -42,6 +42,14 @@ internal class Program
             }
         }
 
+        //public static Option<bool> FeaturesOption { get; set; } = new("--features");
+        //public static Option<bool> GroupsOption { get; set; } = new("--groups");
+        //public static Option<bool> PresetsOption { get; set; } = new("--presets");
+        //public static Option<bool> EnabledOption { get; set; } = new("--enabled");
+        //public static Option<bool> FisabledOption { get; set; } = new("--disabled");
+
+        Globals.Args.listArgumnet.AcceptOnlyFromAmong(["features", "groups", "presets", "enabled", "disabled"]);
+
         Globals.Args.FeaturesPathOption.DefaultValueFactory = _ => "./Build/Features/";
         Globals.Args.GeneratedPathOption.DefaultValueFactory = _ => "./Build/Generated/";
         Globals.Args.ConfigsPathOption.DefaultValueFactory = _ => "./Build/Configs/";
@@ -52,7 +60,7 @@ internal class Program
         // check handler
         Globals.Args.ValidateCommand.SetAction(Wrap(ValidateHandler.Handle));
         // clean handler
-        // list handler
+        Globals.Args.ListCommand.SetAction(Wrap(ListCommandHandler.Handle));
         // preset handler
         // feature handler
         // info handler
