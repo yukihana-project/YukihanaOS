@@ -42,12 +42,6 @@ internal class Program
             }
         }
 
-        //public static Option<bool> FeaturesOption { get; set; } = new("--features");
-        //public static Option<bool> GroupsOption { get; set; } = new("--groups");
-        //public static Option<bool> PresetsOption { get; set; } = new("--presets");
-        //public static Option<bool> EnabledOption { get; set; } = new("--enabled");
-        //public static Option<bool> FisabledOption { get; set; } = new("--disabled");
-
         Globals.Args.listArgumnet.AcceptOnlyFromAmong(["features", "groups", "presets", "enabled", "disabled"]);
 
         Globals.Args.FeaturesPathOption.DefaultValueFactory = _ => "./Build/Features/";
@@ -61,7 +55,8 @@ internal class Program
         Globals.Args.ValidateCommand.SetAction(Wrap(ValidateHandler.Handle));
         // clean handler
         Globals.Args.ListCommand.SetAction(Wrap(ListCommandHandler.Handle));
-        // TODO: preset handler
+        Globals.Args.ListSubcommand.SetAction(Wrap(PresetCommandHandler.HandleList));
+        Globals.Args.ShowSubcommand.SetAction(Wrap(PresetCommandHandler.HandleShow));
         // TODO: feature handler
         // TODO: info handler
         // TODO: graph handler
