@@ -51,7 +51,7 @@ internal class Program
 
         Globals.Args.ConfigureCommand.SetAction(Wrap(ConfigureManager.Handle));
         Globals.Args.MenuCommand.SetAction(Wrap(MenuCommandHandler.Handle));
-        // check handler
+        Globals.Args.CheckCommand.SetAction(Wrap(CheckCommandHandler.Handle));
         Globals.Args.ValidateCommand.SetAction(Wrap(ValidateHandler.Handle));
         // clean handler
         Globals.Args.ListCommand.SetAction(Wrap(ListCommandHandler.Handle));

@@ -2,8 +2,10 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE for details.
 
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using Serilog;
+using Tomlyn;
 using Yukihana.BuildConfig.SourceGenerators;
 using Yukihana.BuildConfig.Toml;
 
@@ -42,6 +44,31 @@ internal static class SourceGenerator
             string generatedTargets = GenerateTargetsFile(allFeatures, manifest);
             targetsFs.Write(Encoding.UTF8.GetBytes(generatedTargets));
         }
+
+        Log.Verbose("Creating State file");
+
+        using SHA256 sha256 = SHA256.Create();
+        using FileStream manifestStream = File.OpenRead(Globals.ManifestTomlPath);
+        using FileStream currentStream = File.OpenRead(Globals.GetManifestClosePath("Current.toml"));
+
+        ConfigManager.StateConfig = new()
+        {
+            GeneratorVersion = typeof(Program).Assembly.GetName().Version ?? new(1,0,0),
+            ManifestHash = Convert.ToHexStringLower(sha256.ComputeHash(manifestStream)),
+            ConfigurationHash = Convert.ToHexStringLower(sha256.ComputeHash(currentStream)),
+            GeneratedTime = DateTime.UtcNow
+        };
+
+        if (current.Config is not null)
+        {
+            if (File.Exists(Path.Combine(Globals.ConfigsDirectoryPath, $"{current.Config}.toml")))
+            {
+                ConfigManager.StateConfig.Preset = current.Config;
+            }
+        }
+
+        using FileStream stateStream = File.OpenWrite(Globals.GetManifestClosePath("State.toml"));
+        TomlSerializer.Serialize(stateStream, ConfigManager.StateConfig, StateConfigContext.Default);
     }
 
     private static List<ResolvedNode> BuildResolvedGraph(

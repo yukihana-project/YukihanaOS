@@ -48,7 +48,8 @@ internal static class ConfigureManager
 
         CurrentConfig newCurrent = new()
         {
-            Enabled = [.. ConfigManager.ManifestConfig!.Feature.Where(f => preset.Enabled.Contains(f.Id)).Select(f => f.Id)]
+            Enabled = [.. ConfigManager.ManifestConfig!.Feature.Where(f => preset.Enabled.Contains(f.Id)).Select(f => f.Id)],
+            Config = presetName
         };
 
         using (FileStream fs = File.Open(Globals.GetManifestClosePath("Current.toml"), FileMode.Create, FileAccess.Write, FileShare.None))

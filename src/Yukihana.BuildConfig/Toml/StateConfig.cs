@@ -20,7 +20,7 @@ internal sealed class StateConfig
 
     public string ManifestHash { get; set; } = string.Empty;
     public string ConfigurationHash { get; set; } = string.Empty;
-    public string Preset { get; set; } = string.Empty;
+    public string? Preset { get; set; }
 
     [JsonPropertyName("generated")]
     public DateTime GeneratedTime { get; set; } = new();

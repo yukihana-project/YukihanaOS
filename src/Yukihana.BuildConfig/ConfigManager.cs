@@ -74,10 +74,6 @@ internal static class ConfigManager
             {
                 CurrentConfig = TomlSerializer.Deserialize<CurrentConfig>(fs, CurrentConfigContext.Default);
             }
-            //using (FileStream fs = File.Open(Globals.GetManifestClosePath("State.toml"), FileMode.Open, FileAccess.Read, FileShare.Read))
-            //{
-            //    StateConfig = TomlSerializer.Deserialize<StateConfig>(fs, StateConfigContext.Default);
-            //}
         }
         catch (Exception ex)
         {
@@ -91,11 +87,17 @@ internal static class ConfigManager
             Environment.Exit(1);
         }
 
-        //if (StateConfig is null)
-        //{
-        //    Log.Fatal("Unable to parse State.toml. Please, configure the build first");
-        //    Environment.Exit(1);
-        //}
+        try
+        {
+            using (FileStream fs = File.Open(Globals.GetManifestClosePath("State.toml"), FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                StateConfig = TomlSerializer.Deserialize<StateConfig>(fs, StateConfigContext.Default);
+            }
+        }
+        catch
+        {
+            
+        }
     }
 
     public static void UpdateCurrentConfig(Dictionary<string, bool> features)
