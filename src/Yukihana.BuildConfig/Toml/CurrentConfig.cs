@@ -11,7 +11,6 @@ internal sealed class CurrentConfig
 {
     public int Version { get; set; } = 1;
     public List<string>? Enabled { get; set; } = [];
-    public List<string>? Disabled { get; set; } = [];
 }
 
 [TomlSourceGenerationOptions(

@@ -12,7 +12,7 @@ internal static class ConfigManager
 {
     public static CurrentConfig? CurrentConfig { get; set; } = new();
     public static ManifestConfig? ManifestConfig { get; set; } = new();
-    public static List<PresetConfig>? PresetConfigs { get; set; } = [];
+    public static Dictionary<string, PresetConfig> PresetConfigs { get; set; } = [];
     public static StateConfig? StateConfig { get; set; } = new();
     private static bool s_hasLoadedConfigs = false;
 
@@ -30,6 +30,22 @@ internal static class ConfigManager
             using (FileStream fs = File.Open(Globals.ManifestTomlPath, FileMode.Open, FileAccess.Read, FileShare.None))
             {
                 ManifestConfig = TomlSerializer.Deserialize<ManifestConfig>(fs, ManifestConfigContext.Default);
+            }
+
+            foreach(string file in Directory.GetFiles(Globals.ConfigsDirectoryPath))
+            {
+                using (FileStream fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
+                {
+                    PresetConfig? preset = TomlSerializer.Deserialize<PresetConfig>(fs, PresetConfigContext.Default);
+
+                    if (preset is null)
+                    {
+                        Log.Error("Unable to load preset {PresetPath}. Is it valid toml?", file);
+                        continue;
+                    }
+
+                    PresetConfigs.Add(Path.GetFileNameWithoutExtension(file), preset);
+                }
             }
         }
         catch (Exception ex)
@@ -78,7 +94,6 @@ internal static class ConfigManager
         CurrentConfig = new()
         {
             Enabled = [.. features.Where(kv => kv.Value).Select(kv => kv.Key)],
-            Disabled = [.. features.Where(kv => !kv.Value).Select(kv => kv.Key)]
         };
 
         try

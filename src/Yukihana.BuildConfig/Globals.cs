@@ -69,17 +69,17 @@ internal static class Globals
         {
             Description = "Remove generated files before generation."
         };
-        public static Option<bool> NoSaveOption { get; set; } = new("--no-save")
-        {
-            Description = "Do not update Current.toml."
-        };
+        //public static Option<bool> NoSaveOption { get; set; } = new("--no-save")
+        //{
+        //    Description = "Do not update Current.toml."
+        //};
 
         public static Command ConfigureCommand { get; set; } = new("configure", "Generated the build configuration.")
         {
             PresetArgument,
             InteractiveOption,
             CleanOption,
-            NoSaveOption
+            //NoSaveOption
         };
 
         #endregion
