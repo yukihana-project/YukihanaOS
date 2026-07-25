@@ -62,7 +62,7 @@ internal class Program
         Globals.Args.EnableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleEnable));
         Globals.Args.DisableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleDisable));
         
-        // TODO: info handler
+        Globals.Args.InfoCommand.SetAction(Wrap(InfoCommandHandler.Handle));
         // TODO: graph handler
         Globals.Args.InitCommand.SetAction(Wrap(InitCommandHandler.Handle));
 

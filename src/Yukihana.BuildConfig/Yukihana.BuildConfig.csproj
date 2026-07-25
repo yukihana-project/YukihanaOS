@@ -9,6 +9,8 @@
     <AssemblyName>ykconfig</AssemblyName>
     <RuntimeIdentifier>$(NETCoreSdkRuntimeIdentifier)</RuntimeIdentifier>
 
+    <Version>1.0.0</Version>
+
     <Configuration Condition=" '$(Configuration)' == '' Or '$(Configuration)' == 'Debug' ">Release</Configuration>
   </PropertyGroup>
 
