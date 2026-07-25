@@ -1,0 +1,3 @@
+version = 1
+enabled = ["initramfs", "sinks.serial"]
+disabled = []

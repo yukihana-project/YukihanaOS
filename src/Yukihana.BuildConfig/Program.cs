@@ -8,6 +8,7 @@ using Serilog;
 using Serilog.Core;
 using Serilog.Sinks.Spectre;
 using Yukihana.BuildConfig.CommandHandlers;
+using Yukihana.BuildConfig.Menu;
 
 namespace Yukihana.BuildConfig;
 
@@ -38,7 +39,7 @@ internal class Program
 
         Globals.Args.RootCmd.SetAction(RootCommandHandler.Handle);
         // configure handler
-        // menu handler
+        Globals.Args.MenuCommand.SetAction(MenuCommandHandler.Handle);
         // check handler
         // validate handler
         // clean handler
@@ -51,20 +52,28 @@ internal class Program
 
         Globals.Args.RootCmd.Validators.Add(result =>
         {
-            if (result.Children
+            var options = result.Children
                 .OfType<OptionResult>()
-                .Count(or => or.Option == Globals.Args.VerboseOption
-                    || or.Option == Globals.Args.QuietOption) != 1)
+                .Where(or => or.Option == Globals.Args.VerboseOption ||
+                            or.Option == Globals.Args.QuietOption)
+                .ToList();
+            
+            if (options.Count == 0)
             {
-                OptionResult verbose = result.Children.OfType<OptionResult>().First(or => or.Option == Globals.Args.VerboseOption);
-                OptionResult quiet = result.Children.OfType<OptionResult>().First(or => or.Option == Globals.Args.QuietOption);
-                result.AddError(string.Format(MUTUAL_EXCLUSIVE_MSG, verbose.IdentifierToken, quiet.IdentifierToken));
+                return;
             }
+
+            if (options.Count == 1)
+            {
+                return;
+            }
+
+            result.AddError(string.Format(MUTUAL_EXCLUSIVE_MSG, options[0].IdentifierToken, options[1].IdentifierToken));
         });
 
         ParseResult result = Globals.Args.RootCmd.Parse(args);
 
-        if (result.Errors.Count > 0)
+        if (args.Length > 0 && result.Errors.Count > 0)
         {
             string fullCmdLine = string.Join(" ", args);
 

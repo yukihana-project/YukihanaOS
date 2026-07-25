@@ -15,6 +15,8 @@ internal static class Globals
     public static string OutputDirectoryPath { get; set; } = "./Build/Generated/";
     public static string ManifestTomlPath { get; set; } = "./Build/Manifest.toml";
 
+    public static string GetManifestClosePath(string fileName) => ManifestTomlPath.Replace(Path.GetFileName(ManifestTomlPath), fileName);
+
     public static class Args
     {
         #region Global options
