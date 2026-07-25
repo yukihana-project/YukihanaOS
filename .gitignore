@@ -11,6 +11,8 @@ src/Yukihana.BuildConfig/publish/
 
 # Build config system
 ykconfig*
+src/Yukihana/Build/Current.toml
+src/Yukihana/Build/State.toml
 
 # Generated files
 Generated/
