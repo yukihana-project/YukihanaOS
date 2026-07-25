@@ -13,7 +13,7 @@ internal static class ValidateHandler
     {
         return Validate();
     }
-    
+
     public static int Validate()
     {
         ConfigManager.LoadConfigs();

@@ -1,3 +1,0 @@
-version = 1
-config = "full"
-enabled = ["init_ram_fs", "sinks_serial"]

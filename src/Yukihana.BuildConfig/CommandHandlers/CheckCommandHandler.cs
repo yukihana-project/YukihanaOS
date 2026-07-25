@@ -27,7 +27,7 @@ internal static class CheckCommandHandler
 
         if (state.GeneratorVersion < typeof(Program).Assembly.GetName().Version)
         {
-            Log.Warning("The configuration was made by older version of ykconfig ({OldVersion} < {CurrentVersion})", 
+            Log.Warning("The configuration was made by older version of ykconfig ({OldVersion} < {CurrentVersion})",
                 state.GeneratorVersion, typeof(Program).Assembly.GetName().Version);
 
             if (!doFix)
@@ -50,14 +50,14 @@ internal static class CheckCommandHandler
         {
             manifestHash = sha256.ComputeHash(manifestStream);
         }
-        using (FileStream currentStream = File.OpenRead(Globals.GetManifestClosePath("Current.toml"))) 
+        using (FileStream currentStream = File.OpenRead(Globals.GetManifestClosePath("Current.toml")))
         {
             currentHash = sha256.ComputeHash(currentStream);
         }
 
         byte[] manifestChecksum = Convert.FromHexString(state.ManifestHash);
         byte[] currentChecksum = Convert.FromHexString(state.ConfigurationHash);
-        
+
         if (!manifestChecksum.AsSpan().SequenceEqual(manifestHash))
         {
             Log.Warning("The Manifest.toml checksum missmatched");

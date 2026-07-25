@@ -96,7 +96,7 @@ internal static class ConfigManager
         }
         catch
         {
-            
+
         }
     }
 

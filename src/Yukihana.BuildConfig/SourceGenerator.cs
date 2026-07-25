@@ -53,7 +53,7 @@ internal static class SourceGenerator
 
         ConfigManager.StateConfig = new()
         {
-            GeneratorVersion = typeof(Program).Assembly.GetName().Version ?? new(1,0,0),
+            GeneratorVersion = typeof(Program).Assembly.GetName().Version ?? new(1, 0, 0),
             ManifestHash = Convert.ToHexStringLower(sha256.ComputeHash(manifestStream)),
             ConfigurationHash = Convert.ToHexStringLower(sha256.ComputeHash(currentStream)),
             GeneratedTime = DateTime.UtcNow
