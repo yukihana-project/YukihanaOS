@@ -9,5 +9,8 @@ src/Yukihana.BuildConfig/publish/
 *.img
 *.cpio.gz
 
-# Build system
+# Build config system
 ykconfig*
+
+# Generated files
+Generated/

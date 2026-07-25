@@ -1,6 +1,6 @@
 description = "Debug configuration"
 
 enabled = [
-    "initramfs",
-    "sinks.serial"
+    "init_ram_fs",
+    "sinks_serial"
 ]

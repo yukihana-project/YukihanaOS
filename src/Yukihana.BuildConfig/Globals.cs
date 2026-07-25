@@ -59,7 +59,10 @@ internal static class Globals
 
         #region 'configure' command
 
-        public static Argument<string?> PresetArgument { get; set; } = new("preset");
+        public static Argument<string?> PresetArgument { get; set; } = new("preset")
+        {
+            Arity = ArgumentArity.ZeroOrOne
+        };
 
         public static Option<bool> InteractiveOption { get; set; } = new("--interactive", "-i")
         {

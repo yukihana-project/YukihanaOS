@@ -77,6 +77,7 @@ internal static class ConfigPage
                 }
             case Save:
                 ConfigManager.UpdateCurrentConfig(featureStates);
+                SourceGenerator.GenerateFromCurrent();
                 AnsiConsole.Clear();
                 Log.Information("Saved Current.toml");
                 Environment.Exit(0);
