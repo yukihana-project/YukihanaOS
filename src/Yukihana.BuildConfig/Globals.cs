@@ -181,7 +181,7 @@ internal static class Globals
 
         #endregion
 
-        public static Command GraphCommand { get; set; } = new("graph", "Show included feature tree.");
+        //public static Command GraphCommand { get; set; } = new("graph", "Show included feature tree.");
 
         #region 'info' command
 
@@ -215,7 +215,7 @@ internal static class Globals
             ListCommand,
             PresetCommand,
             FeatureCommand,
-            GraphCommand,
+            //GraphCommand,
             InfoCommand,
             InitCommand
         };
