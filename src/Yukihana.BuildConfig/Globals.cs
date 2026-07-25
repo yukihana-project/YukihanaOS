@@ -167,16 +167,16 @@ internal static class Globals
             FeatureArgument
         };
 
-        public static Command ToggleSubcommand { get; set; } = new("toggle", "Toggle the feature on or off.")
-        {
-            FeatureArgument
-        };
+        //public static Command ToggleSubcommand { get; set; } = new("toggle", "Toggle the feature on or off.")
+        //{
+        //    FeatureArgument
+        //};
 
         public static Command FeatureCommand { get; set; } = new("feature", "Modify single feature.")
         {
             EnableSubcommand,
             DisableSubcommand,
-            ToggleSubcommand
+            //ToggleSubcommand
         };
 
         #endregion

@@ -55,9 +55,13 @@ internal class Program
         Globals.Args.ValidateCommand.SetAction(Wrap(ValidateHandler.Handle));
         // clean handler
         Globals.Args.ListCommand.SetAction(Wrap(ListCommandHandler.Handle));
+
         Globals.Args.ListSubcommand.SetAction(Wrap(PresetCommandHandler.HandleList));
         Globals.Args.ShowSubcommand.SetAction(Wrap(PresetCommandHandler.HandleShow));
-        // TODO: feature handler
+
+        Globals.Args.EnableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleEnable));
+        Globals.Args.DisableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleDisable));
+        
         // TODO: info handler
         // TODO: graph handler
         Globals.Args.InitCommand.SetAction(Wrap(InitCommandHandler.Handle));
