@@ -142,14 +142,15 @@ Current high-level architecture:
 git clone https://github.com/zimavi/Yukihana.git
 cd Yukihana
 
-dotnet build ../Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+dotnet build src/Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+cd src/Yukihana
 ./ykconfig init
 ./ykconfig configure <preset>
 
 dotnet tool install -g Cosmos.Tools
 cosmos install
 
-cosmos build -p src/Yukihana -c Release --a x64
+cosmos build -c Release --a x64
 ```
 
 Replace `Release` with `Debug`, and `x64` with `arm64` as needed. Also, for verbose building use `-v` flag.
@@ -160,16 +161,18 @@ Then build the project. Replace `<preset>` with configuration (full, minimal, de
 
 Install CosmosOS Gen3 using the installer provided by its releases.
 
-```bash
+```powershell
 git clone https://github.com/zimavi/Yukihana.git
 cd Yukihana
 
+dotnet build src/Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
 cd src/Yukihana
-dotnet build ../Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
 ./ykconfig init
 ./ykconfig configure <preset>
 
-cosmos build -p src/Yukihana -c Release --a x64
+cosmos install
+
+cosmos build -c Release --a x64
 ```
 
 If you want to use menu for configuration, instead of preset, use `-i` flag
