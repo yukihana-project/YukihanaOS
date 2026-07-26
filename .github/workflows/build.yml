@@ -53,9 +53,13 @@ jobs:
               working-directory: src/Yukihana
               run: dotnet build ../Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
 
+            - name: 📂 Init build configuration
+              working-directory: src/Yukihana
+              run: ./ykconfig init
+
             - name: ✒️ Configure build
               working-directory: src/Yukihana
-              run: ./ykconfig configure full -q
+              run: ./ykconfig configure full -v
 
             - name: 🚀 Build kernel (Release ${{ matrix.arch }})
               working-directory: src/Yukihana

@@ -35,7 +35,10 @@ internal static class InitCommandHandler
 
         Log.Verbose("Creating Manifest.toml at -> {ManifestPath}", manifestPath);
 
-        File.Create(manifestPath);
+        if (!File.Exists(manifestPath))
+        {
+            File.Create(manifestPath);
+        }
 
         Log.Information("You would need to fill .toml files your self. Use --help to know more");
 
