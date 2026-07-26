@@ -11,18 +11,18 @@ internal static class CleanCommandHandler
     {
         bool doCleanCurrent = result.GetValue(Globals.Args.AllOption);
 
-        string[] files = [.. Directory.EnumerateFiles(Globals.OutputDirectoryPath)];
+        string[] files = [.. Directory.EnumerateFiles(Configuration.OutputDirectoryPath)];
 
         foreach (string path in files)
         {
             File.Delete(path);
         }
 
-        File.Delete(Globals.GetManifestClosePath("State.toml"));
+        File.Delete(Configuration.StateTomlPath);
 
         if (doCleanCurrent)
         {
-            File.Delete(Globals.GetManifestClosePath("Current.toml"));
+            File.Delete(Configuration.CurrentTomlPath);
         }
 
         return 0;

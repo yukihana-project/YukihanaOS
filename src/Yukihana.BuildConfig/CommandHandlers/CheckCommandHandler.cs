@@ -17,7 +17,7 @@ internal static class CheckCommandHandler
 
         ConfigManager.LoadConfigs(true);
 
-        if (!File.Exists(Globals.GetManifestClosePath("State.toml")) || ConfigManager.StateConfig is null)
+        if (!File.Exists(Configuration.StateTomlPath) || ConfigManager.StateConfig is null)
         {
             Log.Fatal("No configuration was generated. Please, generate configuration before checking");
             return 1;
@@ -46,11 +46,11 @@ internal static class CheckCommandHandler
         byte[] manifestHash;
         byte[] currentHash;
 
-        using (FileStream manifestStream = File.OpenRead(Globals.ManifestTomlPath))
+        using (FileStream manifestStream = File.OpenRead(Configuration.ManifestTomlPath))
         {
             manifestHash = sha256.ComputeHash(manifestStream);
         }
-        using (FileStream currentStream = File.OpenRead(Globals.GetManifestClosePath("Current.toml")))
+        using (FileStream currentStream = File.OpenRead(Configuration.CurrentTomlPath))
         {
             currentHash = sha256.ComputeHash(currentStream);
         }
@@ -111,7 +111,7 @@ internal static class CheckCommandHandler
                 Config = presetName
             };
 
-            using (FileStream fs = File.Open(Globals.GetManifestClosePath("Current.toml"), FileMode.Create, FileAccess.Write, FileShare.None))
+            using (FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 TomlSerializer.Serialize(fs, newCurrent, CurrentConfigContext.Default);
             }

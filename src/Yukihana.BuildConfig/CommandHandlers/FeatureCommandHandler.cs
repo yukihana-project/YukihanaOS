@@ -37,7 +37,7 @@ internal static class FeatureCommandHandler
 
         ConfigManager.CurrentConfig!.Enabled.Add(feature);
 
-        using FileStream fs = File.Open(Globals.GetManifestClosePath("Current.toml"), FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+        using FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
         TomlSerializer.Serialize(fs, ConfigManager.CurrentConfig, CurrentConfigContext.Default);
 
         return 0;
@@ -74,7 +74,7 @@ internal static class FeatureCommandHandler
 
         ConfigManager.CurrentConfig!.Enabled.Remove(feature);
 
-        using FileStream fs = File.Open(Globals.GetManifestClosePath("Current.toml"), FileMode.Create, FileAccess.ReadWrite, FileShare.None);
+        using FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
         TomlSerializer.Serialize(fs, ConfigManager.CurrentConfig, CurrentConfigContext.Default);
 
         return 0;

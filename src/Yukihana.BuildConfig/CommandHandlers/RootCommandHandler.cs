@@ -13,10 +13,6 @@ internal static class RootCommandHandler
         bool isVerbose = result.GetValue(Globals.Args.VerboseOption);
         bool isQuiet = result.GetValue(Globals.Args.QuietOption);
         bool noColor = result.GetValue(Globals.Args.NoColorOption);
-        string featuresPath = result.GetValue(Globals.Args.FeaturesPathOption)!;
-        string outputPath = result.GetValue(Globals.Args.GeneratedPathOption)!;
-        string configsPath = result.GetValue(Globals.Args.ConfigsPathOption)!;
-        string manifestPath = result.GetValue(Globals.Args.ManifestPathOption)!;
 
         if (isVerbose)
         {
@@ -32,11 +28,6 @@ internal static class RootCommandHandler
             AnsiConsole.Profile.Capabilities.Ansi = false;
             AnsiConsole.Profile.Capabilities.ColorSystem = ColorSystem.NoColors;
         }
-
-        Globals.FeaturesDirectoryPath = featuresPath;
-        Globals.OutputDirectoryPath = outputPath;
-        Globals.ConfigsDirectoryPath = configsPath;
-        Globals.ManifestTomlPath = manifestPath;
 
         return 0;
     }

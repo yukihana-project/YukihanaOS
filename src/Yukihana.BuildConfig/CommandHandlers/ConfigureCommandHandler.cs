@@ -16,7 +16,6 @@ internal static class ConfigureManager
         string? presetName = result.GetValue(Globals.Args.PresetArgument);
         bool isInteractive = result.GetValue(Globals.Args.InteractiveOption);
         bool doClean = result.GetValue(Globals.Args.CleanOption);
-        //bool doNotSave = result.GetValue(Globals.Args.NoSaveOption);
 
         ConfigManager.LoadConfigs(false);
 
@@ -40,7 +39,7 @@ internal static class ConfigureManager
 
         if (doClean)
         {
-            foreach (string file in Directory.EnumerateFiles(Globals.OutputDirectoryPath))
+            foreach (string file in Directory.EnumerateFiles(Configuration.OutputDirectoryPath))
             {
                 File.Delete(file);
             }
@@ -52,7 +51,7 @@ internal static class ConfigureManager
             Config = presetName
         };
 
-        using (FileStream fs = File.Open(Globals.GetManifestClosePath("Current.toml"), FileMode.Create, FileAccess.Write, FileShare.None))
+        using (FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.Write, FileShare.None))
         {
             TomlSerializer.Serialize(fs, newCurrent, CurrentConfigContext.Default);
         }

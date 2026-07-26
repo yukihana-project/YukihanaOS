@@ -12,7 +12,7 @@ internal static class PresetCommandHandler
 {
     public static int HandleList(ParseResult result)
     {
-        string[] files = [.. Directory.EnumerateFiles(Globals.ConfigsDirectoryPath).Select(f => Path.GetFileNameWithoutExtension(f))];
+        string[] files = [.. Directory.EnumerateFiles(Configuration.ConfigsDirectoryPath).Select(f => Path.GetFileNameWithoutExtension(f))];
 
         foreach (string file in files)
         {
@@ -30,7 +30,7 @@ internal static class PresetCommandHandler
             return 1;
         }
 
-        string path = Path.Combine(Globals.ConfigsDirectoryPath, $"{name}.toml");
+        string path = Path.Combine(Configuration.ConfigsDirectoryPath, $"{name}.toml");
 
         if (!File.Exists(path))
         {
