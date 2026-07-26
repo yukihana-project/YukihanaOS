@@ -23,7 +23,7 @@ The project is built on top of the upcoming **CosmosOS Gen3**, allowing low-leve
 
 The long-term goal is not to provide a production-ready operating system, but to create a modern and enjoyable environment for experimenting with kernel development, filesystems, security, and system architecture.
 
-It is composed of multiple componets. For now, it requires only **[YKConfig](src/Yukihana.BuildConfig/README.md)** to be built
+It is composed of multiple components. For now, it requires only **[YKConfig](src/Yukihana.BuildConfig/README.md)** to be built.
 
 ---
 
@@ -31,7 +31,7 @@ It is composed of multiple componets. For now, it requires only **[YKConfig](src
 
 Operating system development often requires implementing large amounts of architecture-specific code before meaningful progress can be made.
 
-I tried multiple times, but it was quite difficult to find documentation or somewhat meaningfull tutorials, so I stick with CosmosOS. I welcome anyone to collaborate, and help me with this, as I really like learning from profecionals or just people who know more then me.
+I tried multiple times, but it was quite difficult to find documentation or somewhat meaningfull tutorials, so I stuck with CosmosOS. I welcome anyone to collaborate, and help me with this, as I really like learning from profecionals or just people who know more than me.
 
 ---
 
@@ -154,14 +154,20 @@ Replace `Release` with `Debug`, and `x64` with `arm64` as needed. Also, for verb
 
 Install CosmosOS Gen3 using the installer provided by its releases.
 
-Then build the project:
+Then build the project. Replace `<preset>` with configuration (full, minimal, debug):
 
-```powershell
+```bash
 git clone https://github.com/zimavi/Yukihana.git
 cd Yukihana
 
+cd src/Yukihana
+dotnet build ../Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+./ykconfig configure <preset>
+
 cosmos build -p src/Yukihana -c Release --a x64
 ```
+
+If you want to use menu for configuration, instead of preset, use `-i` flag
 
 ---
 
