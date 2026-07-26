@@ -23,6 +23,8 @@ The project is built on top of the upcoming **CosmosOS Gen3**, allowing low-leve
 
 The long-term goal is not to provide a production-ready operating system, but to create a modern and enjoyable environment for experimenting with kernel development, filesystems, security, and system architecture.
 
+It is composed of multiple componets. For now, it requires only **[YKConfig](src/Yukihana.BuildConfig/README.md)** to be built
+
 ---
 
 ## Philosophy
@@ -58,11 +60,11 @@ Core infrastructure is actively being developed before moving on to userspace, g
 * [x] Optional resource loading groups
 * [x] In-memory block device
 * [x] Initial InitFS implementation
+* [X] Kernel module system (via ![YKConfig](src/Yukihana.BuildConfig/README.md))
 
 ### Planned
 
 * [ ] ext4 filesystem (WIP)
-* [ ] Kernel module system
 * [ ] Interactive shell
 * [ ] Package manager
 * [ ] Graphics stack
