@@ -9,10 +9,12 @@ namespace Yukihana.BuildConfig;
 /// </summary>
 public static class Configuration
 {
+    public static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
     /// <summary>
     /// Directory where the tool stores all of its files.
     /// </summary>
-    public static readonly string ToolFolder = "./Build/";
+    public static readonly string ToolFolder = Path.Combine(BaseDirectory, "Build/");
 
     /// <summary>
     /// Directory, where presets (combination of features) are defined.
