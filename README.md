@@ -142,6 +142,10 @@ Current high-level architecture:
 git clone https://github.com/zimavi/Yukihana.git
 cd Yukihana
 
+dotnet build ../Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+./ykconfig init
+./ykconfig configure <preset>
+
 dotnet tool install -g Cosmos.Tools
 cosmos install
 
