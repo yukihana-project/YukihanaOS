@@ -60,7 +60,7 @@ Core infrastructure is actively being developed before moving on to userspace, g
 * [x] Optional resource loading groups
 * [x] In-memory block device
 * [x] Initial InitFS implementation
-* [X] Kernel module system (via ![YKConfig](src/Yukihana.BuildConfig/README.md))
+* [X] Kernel module system (via [YKConfig](src/Yukihana.BuildConfig/README.md))
 
 ### Planned
 
