@@ -23,13 +23,15 @@ The project is built on top of the upcoming **CosmosOS Gen3**, allowing low-leve
 
 The long-term goal is not to provide a production-ready operating system, but to create a modern and enjoyable environment for experimenting with kernel development, filesystems, security, and system architecture.
 
+It is composed of multiple components. For now, it requires only **[YKConfig](src/Yukihana.BuildConfig/README.md)** to be built.
+
 ---
 
 ## Philosophy
 
 Operating system development often requires implementing large amounts of architecture-specific code before meaningful progress can be made.
 
-I tried multiple times, but it was quite difficult to find documentation or somewhat meaningfull tutorials, so I stick with CosmosOS. I welcome anyone to collaborate, and help me with this, as I really like learning from profecionals or just people who know more then me.
+I tried multiple times, but it was quite difficult to find documentation or somewhat meaningfull tutorials, so I stuck with CosmosOS. I welcome anyone to collaborate, and help me with this, as I really like learning from profecionals or just people who know more than me.
 
 ---
 
@@ -58,11 +60,11 @@ Core infrastructure is actively being developed before moving on to userspace, g
 * [x] Optional resource loading groups
 * [x] In-memory block device
 * [x] Initial InitFS implementation
+* [X] Kernel module system (via [YKConfig](src/Yukihana.BuildConfig/README.md))
 
 ### Planned
 
 * [ ] ext4 filesystem (WIP)
-* [ ] Kernel module system
 * [ ] Interactive shell
 * [ ] Package manager
 * [ ] Graphics stack
@@ -140,26 +142,40 @@ Current high-level architecture:
 git clone https://github.com/zimavi/Yukihana.git
 cd Yukihana
 
+dotnet build src/Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+cd src/Yukihana
+./ykconfig init
+./ykconfig configure <preset>
+
 dotnet tool install -g Cosmos.Tools
 cosmos install
 
-cosmos build -p src/Yukihana -c Release --a x64
+cosmos build -c Release --a x64
 ```
 
 Replace `Release` with `Debug`, and `x64` with `arm64` as needed. Also, for verbose building use `-v` flag.
+
+Then build the project. Replace `<preset>` with configuration (full, minimal, debug):
 
 ### Windows
 
 Install CosmosOS Gen3 using the installer provided by its releases.
 
-Then build the project:
-
 ```powershell
 git clone https://github.com/zimavi/Yukihana.git
 cd Yukihana
 
-cosmos build -p src/Yukihana -c Release --a x64
+dotnet build src/Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+cd src/Yukihana
+./ykconfig init
+./ykconfig configure <preset>
+
+cosmos install
+
+cosmos build -c Release --a x64
 ```
+
+If you want to use menu for configuration, instead of preset, use `-i` flag
 
 ---
 

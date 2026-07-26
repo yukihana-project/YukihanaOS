@@ -1,0 +1,6 @@
+description = "Debug configuration"
+
+enabled = [
+    "init_ram_fs",
+    "sinks_serial"
+]

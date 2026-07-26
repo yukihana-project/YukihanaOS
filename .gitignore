@@ -1,6 +1,18 @@
+# Build folders
 bin/
 obj/
 output-x64/
 output-arm64/
+src/Yukihana.BuildConfig/publish/
+
+# Large files
 *.img
 *.cpio.gz
+
+# Build config system
+ykconfig*
+src/Yukihana/Build/Current.toml
+src/Yukihana/Build/State.toml
+
+# Generated files
+Generated/

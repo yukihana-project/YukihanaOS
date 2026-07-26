@@ -1,0 +1,45 @@
+version = 1
+
+[metadata]
+name = "Yukihana OS"
+description = "Feature configuration manifest"
+
+[[group]]
+id = "kernel"
+name = "Kernel"
+
+[[group]]
+id = "debug"
+name = "Debug"
+
+[[group]]
+id = "debug.logger"
+name = "Logger"
+parent = "debug"
+
+# ------------------
+# Features
+# ------------------
+
+[[feature]]
+id = "init_ram_fs"
+name = "InitRamFS"
+group = "kernel"
+
+description = "Allows kernel to load temporary filesystem from archive."
+
+define = "FEATURE_INIT_RAM_FS"
+enabled_by_default = true
+
+[[feature]]
+id = "sinks_serial"
+name = "Serial Sink"
+group = "debug.logger"
+
+description = "Enables kernel to log to serial port"
+
+define = "FEATURE_SERIAL_SINK"
+
+exclude = [
+    "Debug/Sinks/ConsoleSink.cs"
+]
