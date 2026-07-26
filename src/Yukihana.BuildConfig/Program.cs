@@ -44,11 +44,6 @@ internal class Program
 
         Globals.Args.listArgumnet.AcceptOnlyFromAmong(["features", "groups", "presets", "enabled", "disabled"]);
 
-        Globals.Args.FeaturesPathOption.DefaultValueFactory = _ => "./Build/Features/";
-        Globals.Args.GeneratedPathOption.DefaultValueFactory = _ => "./Build/Generated/";
-        Globals.Args.ConfigsPathOption.DefaultValueFactory = _ => "./Build/Configs/";
-        Globals.Args.ManifestPathOption.DefaultValueFactory = _ => "./Build/Manifest.toml";
-
         Globals.Args.ConfigureCommand.SetAction(Wrap(ConfigureManager.Handle));
         Globals.Args.MenuCommand.SetAction(Wrap(MenuCommandHandler.Handle));
         Globals.Args.CheckCommand.SetAction(Wrap(CheckCommandHandler.Handle));

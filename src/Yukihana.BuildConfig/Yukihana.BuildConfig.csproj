@@ -22,7 +22,10 @@
 
   <PropertyGroup>
     <PublishDir>$(MSBuildProjectDirectory)/publish/</PublishDir>
+
+    <!-- Edit this to where your porject is -->
     <YukihanaDir>$(MSBuildProjectDirectory)\..\Yukihana\</YukihanaDir>
+
     <PublishedExecutable>$(PublishDir)$(AssemblyName)$(ExeExtension)</PublishedExecutable>
     <CopiedExecutable>$(YukihanaDir)$(AssemblyName)$(ExeExtension)</CopiedExecutable>
   </PropertyGroup>

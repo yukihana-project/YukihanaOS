@@ -25,7 +25,7 @@ internal static class SourceGenerator
         List<ResolvedNode> graph = BuildResolvedGraph(manifest, current);
         HashSet<ResolvedNode> allFeatures = Flatten(graph);
 
-        string outputPath = Path.Combine(Globals.OutputDirectoryPath, "Features.g.cs");
+        string outputPath = Configuration.GeneratedCsFilePath;
 
         Log.Verbose("Generating class");
 
@@ -35,7 +35,7 @@ internal static class SourceGenerator
             csFs.Write(Encoding.UTF8.GetBytes(generatedClass));
         }
 
-        outputPath = Path.Combine(Globals.OutputDirectoryPath, "Features.g.targets");
+        outputPath = Configuration.GeneratedTargetsFilePath;
 
         Log.Verbose("Generating targets file");
 
@@ -48,8 +48,8 @@ internal static class SourceGenerator
         Log.Verbose("Creating State file");
 
         using SHA256 sha256 = SHA256.Create();
-        using FileStream manifestStream = File.OpenRead(Globals.ManifestTomlPath);
-        using FileStream currentStream = File.OpenRead(Globals.GetManifestClosePath("Current.toml"));
+        using FileStream manifestStream = File.OpenRead(Configuration.ManifestTomlPath);
+        using FileStream currentStream = File.OpenRead(Configuration.CurrentTomlPath);
 
         ConfigManager.StateConfig = new()
         {
@@ -61,13 +61,13 @@ internal static class SourceGenerator
 
         if (current.Config is not null)
         {
-            if (File.Exists(Path.Combine(Globals.ConfigsDirectoryPath, $"{current.Config}.toml")))
+            if (File.Exists(Path.Combine(Configuration.ConfigsDirectoryPath, $"{current.Config}.toml")))
             {
                 ConfigManager.StateConfig.Preset = current.Config;
             }
         }
 
-        using FileStream stateStream = File.OpenWrite(Globals.GetManifestClosePath("State.toml"));
+        using FileStream stateStream = File.OpenWrite(Configuration.StateTomlPath);
         TomlSerializer.Serialize(stateStream, ConfigManager.StateConfig, StateConfigContext.Default);
     }
 
@@ -152,10 +152,10 @@ internal static class SourceGenerator
     {
         CSharpFileGenerator generator = CSharpFileGenerator.Create();
 
-        generator.Comment("This is auto-generated file. DO NOT MODIFY");
-        generator.Namespace("Yukihana");
+        generator.Comments(Configuration.GeneratedCsHeader);
+        generator.Namespace(Configuration.GeneratedCsNamespace);
 
-        ClassBuilder builder = generator.Class("Features").Public().Static();
+        ClassBuilder builder = generator.Class(Configuration.GeneratedCsClassName).Public().Static();
 
         HashSet<string> enabledFeatures = graph
             .Select(rn => rn.Id)
@@ -187,13 +187,13 @@ internal static class SourceGenerator
         generator.AddTarget(INTERNAL_EXCLUDE_TARGET)
             .Before(TARGET_BEFORE)
             .Message("Excluding Generated directory", TargetsFileGenerator.Importance.Low)
-            .ExcludeCompile(Path.Join(Globals.OutputDirectoryPath, "*"));
+            .ExcludeCompile(Path.Join(Configuration.OutputDirectoryPath, "*"));
 
         generator.AddTarget(INTERNAL_INCLUDE_SOURCE_TARGET)
             .Before(TARGET_BEFORE)
             .After(INTERNAL_EXCLUDE_TARGET)
             .Message("Including Features.g.cs", TargetsFileGenerator.Importance.Low)
-            .IncludeCompile(Path.Combine(Globals.OutputDirectoryPath, "Features.g.cs"));
+            .IncludeCompile(Configuration.GeneratedCsFilePath);
 
         var enabledIds = graph
             .Select(rn => rn.Id)

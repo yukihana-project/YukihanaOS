@@ -10,13 +10,6 @@ internal static class Globals
 {
     public static LoggingLevelSwitch LevelSwitch { get; set; } = new(Serilog.Events.LogEventLevel.Information);
 
-    public static string FeaturesDirectoryPath { get; set; } = "./Build/Features/";
-    public static string ConfigsDirectoryPath { get; set; } = "./Build/Configs/";
-    public static string OutputDirectoryPath { get; set; } = "./Build/Generated/";
-    public static string ManifestTomlPath { get; set; } = "./Build/Manifest.toml";
-
-    public static string GetManifestClosePath(string fileName) => ManifestTomlPath.Replace(Path.GetFileName(ManifestTomlPath), fileName);
-
     public static class Args
     {
         #region Global options
@@ -35,30 +28,6 @@ internal static class Globals
         public static Option<bool> NoColorOption { get; set; } = new("--no-color")
         {
             Description = "Disable ASNI colors.",
-            Recursive = true
-        };
-        public static Option<string> FeaturesPathOption { get; set; } = new("--features")
-        {
-            Description = "Path to Features directory",
-            HelpName = "path",
-            Recursive = true
-        };
-        public static Option<string> ManifestPathOption { get; set; } = new("--manifest")
-        {
-            Description = "Path to Manifest.toml",
-            HelpName = "path",
-            Recursive = true
-        };
-        public static Option<string> ConfigsPathOption { get; set; } = new("--configs")
-        {
-            Description = "Path to configs directory",
-            HelpName = "path",
-            Recursive = true
-        };
-        public static Option<string> GeneratedPathOption { get; set; } = new("--generated", "-o")
-        {
-            Description = "Path to generated output directory",
-            HelpName = "path",
             Recursive = true
         };
 
@@ -211,10 +180,6 @@ internal static class Globals
             VerboseOption,
             QuietOption,
             NoColorOption,
-            FeaturesPathOption,
-            ManifestPathOption,
-            ConfigsPathOption,
-            GeneratedPathOption,
 
             // Commands
             ConfigureCommand,

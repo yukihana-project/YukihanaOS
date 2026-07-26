@@ -56,7 +56,7 @@ internal static class ListCommandHandler
 
             case "presets":
                 ConfigManager.LoadConfigs(false);
-                string[] presets = [.. Directory.EnumerateFiles(Globals.ConfigsDirectoryPath).Select(s => Path.GetFileNameWithoutExtension(s))];
+                string[] presets = [.. Directory.EnumerateFiles(Configuration.ConfigsDirectoryPath).Select(s => Path.GetFileNameWithoutExtension(s))];
 
                 if (presets.Length == 0)
                 {

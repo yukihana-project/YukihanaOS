@@ -32,12 +32,12 @@ internal static class ConfigManager
 
         try
         {
-            using (FileStream fs = File.Open(Globals.ManifestTomlPath, FileMode.Open, FileAccess.Read, FileShare.None))
+            using (FileStream fs = File.Open(Configuration.ManifestTomlPath, FileMode.Open, FileAccess.Read, FileShare.None))
             {
                 ManifestConfig = TomlSerializer.Deserialize<ManifestConfig>(fs, ManifestConfigContext.Default);
             }
 
-            foreach (string file in Directory.GetFiles(Globals.ConfigsDirectoryPath))
+            foreach (string file in Directory.GetFiles(Configuration.ConfigsDirectoryPath))
             {
                 using (FileStream fs = File.Open(file, FileMode.Open, FileAccess.Read, FileShare.None))
                 {
@@ -70,7 +70,7 @@ internal static class ConfigManager
 
         try
         {
-            using (FileStream fs = File.Open(Globals.GetManifestClosePath("Current.toml"), FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 CurrentConfig = TomlSerializer.Deserialize<CurrentConfig>(fs, CurrentConfigContext.Default);
             }
@@ -89,7 +89,7 @@ internal static class ConfigManager
 
         try
         {
-            using (FileStream fs = File.Open(Globals.GetManifestClosePath("State.toml"), FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (FileStream fs = File.Open(Configuration.StateTomlPath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 StateConfig = TomlSerializer.Deserialize<StateConfig>(fs, StateConfigContext.Default);
             }
@@ -110,7 +110,7 @@ internal static class ConfigManager
         try
         {
             using FileStream fs = File.Open(
-                Globals.GetManifestClosePath("Current.toml"),
+                Configuration.CurrentTomlPath,
                 FileMode.Create,
                 FileAccess.Write,
                 FileShare.None);
