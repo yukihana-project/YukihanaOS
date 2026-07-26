@@ -8,7 +8,7 @@ namespace Yukihana.BuildConfig.SourceGenerators;
 
 internal sealed class TargetsFileGenerator
 {
-    private readonly List<TargetDefinition> _targets = [];
+    private readonly List<ProjectElement> _elements = [];
 
     private TargetsFileGenerator()
     {
@@ -20,17 +20,24 @@ internal sealed class TargetsFileGenerator
     public TargetDefinition AddTarget(string name)
     {
         var target = new TargetDefinition(name);
-        _targets.Add(target);
+        _elements.Add(target);
         return target;
+    }
+
+    public ImportDefinition Import(string project)
+    {
+        var import = new ImportDefinition(project);
+        _elements.Add(import);
+        return import;
     }
 
     public string Generate()
     {
         var sb = new StringBuilder();
 
-        sb.AppendLine(@"<Project>");
+        sb.AppendLine("<Project>");
 
-        foreach (TargetDefinition target in _targets)
+        foreach (ProjectElement target in _elements)
         {
             target.Write(sb, 1);
         }
@@ -47,9 +54,70 @@ internal sealed class TargetsFileGenerator
         High
     }
 
+    public abstract class ProjectElement
+    {
+        public abstract void Write(StringBuilder sb, int indent);
+
+        protected static void WriteIndent(StringBuilder sb, int level)
+        {
+            sb.Append(' ', level * 2);
+        }
+
+        protected static string Escape(string value)
+        {
+            return SecurityElement.Escape(value) ?? "";
+        }
+    }
+
+    public sealed class ImportDefinition(string project) : ProjectElement
+    {
+        public string Project { get; } = project;
+
+        public string? Condition { get; private set; }
+
+        public string? Label { get; private set; }
+
+        public ImportDefinition When(string condition)
+        {
+            Condition = condition;
+            return this;
+        }
+
+        public ImportDefinition WithLabel(string label)
+        {
+            Label = label;
+            return this;
+        }
+
+        public override void Write(StringBuilder sb, int indent)
+        {
+            WriteIndent(sb, indent);
+
+            sb.Append("<Import Project=\"");
+            sb.Append(Escape(Project));
+            sb.Append('"');
+
+            if (!string.IsNullOrWhiteSpace(Condition))
+            {
+                sb.Append(" Condition=\"");
+                sb.Append(Escape(Condition));
+                sb.Append('"');
+            }
+
+            if (!string.IsNullOrWhiteSpace(Label))
+            {
+                sb.Append(" Label=\"");
+                sb.Append(Escape(Label));
+                sb.Append('"');
+            }
+
+            sb.AppendLine(" />");
+        }
+    }
+
     public sealed record MessageDefinition(string Text, Importance Importance);
 
-    public sealed class TargetDefinition(string name)
+    public sealed class TargetDefinition(string name) : ProjectElement
     {
         private readonly List<MessageDefinition> _messages = [];
         private readonly List<string> _compileIncludes = [];
@@ -115,7 +183,7 @@ internal sealed class TargetsFileGenerator
             => DefineConstants((IEnumerable<string>)constants);
 
 
-        internal void Write(StringBuilder sb, int indent)
+        public override void Write(StringBuilder sb, int indent)
         {
             WriteIndent(sb, indent);
 
@@ -197,16 +265,6 @@ internal sealed class TargetsFileGenerator
 
             WriteIndent(sb, indent);
             sb.AppendLine("</Target>");
-        }
-
-        private static void WriteIndent(StringBuilder sb, int level)
-        {
-            sb.Append(' ', level * 2);
-        }
-
-        private static string Escape(string value)
-        {
-            return SecurityElement.Escape(value) ?? "";
         }
     }
 }
