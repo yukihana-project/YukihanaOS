@@ -22,7 +22,7 @@ parent = "debug"
 # ------------------
 
 [[feature]]
-id = "initramfs"
+id = "init_ram_fs"
 name = "InitRamFS"
 group = "kernel"
 
@@ -32,7 +32,7 @@ define = "FEATURE_INIT_RAM_FS"
 enabled_by_default = true
 
 [[feature]]
-id = "sinks.serial"
+id = "sinks_serial"
 name = "Serial Sink"
 group = "debug.logger"
 
@@ -40,4 +40,6 @@ description = "Enables kernel to log to serial port"
 
 define = "FEATURE_SERIAL_SINK"
 
-# TODO: exclude sources
+exclude = [
+    "Debug/Sinks/ConsoleSink.cs"
+]

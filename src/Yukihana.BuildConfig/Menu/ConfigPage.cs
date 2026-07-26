@@ -29,7 +29,7 @@ internal static class ConfigPage
     {
         AnsiConsole.Clear();
 
-        string pathNames = "Root -> ";
+        string pathNames = "Root";
         string path = string.Empty;
         GroupNode? group = null;
 
@@ -38,7 +38,7 @@ internal static class ConfigPage
 
         if (current is not null)
         {
-            pathNames += tree.GetNamePath(current);
+            pathNames = "Root -> " + tree.GetNamePath(current);
             group = tree.GetNodeByIdPath(tree.GetIdPath(current));
 
             groups = group!.Children;
@@ -54,6 +54,7 @@ internal static class ConfigPage
 
         const string Back = "[gray]<Back>[/]";
         const string Save = "[gray]<Save>[/]";
+        const string Presets = "[gray]<Presets>[/]";
         const string Exit = "[gray]<Exit>[/]";
 
         string selected = AnsiConsole.Prompt(new SelectionPrompt<string>()
@@ -62,7 +63,7 @@ internal static class ConfigPage
             .PageSize(15)
             .MoreChoicesText("[gray](More items available)[/]")
             .AddChoiceGroup("Config", [.. groupNames, .. featureNames])
-            .AddChoiceGroup("Commands", [Back, Save, Exit]));
+            .AddChoiceGroup("Commands", [Back, Save, Presets, Exit]));
 
         switch (selected)
         {
@@ -77,9 +78,21 @@ internal static class ConfigPage
                 }
             case Save:
                 ConfigManager.UpdateCurrentConfig(featureStates);
+                SourceGenerator.GenerateFromCurrent();
                 AnsiConsole.Clear();
                 Log.Information("Saved Current.toml");
                 Environment.Exit(0);
+                break;
+            case Presets:
+                Dictionary<string, bool>? newFeatureStates = PresetsPage.Show();
+                if (newFeatureStates is not null)
+                {
+                    featureStates.Clear();
+                    foreach ((string? k, bool v) in newFeatureStates)
+                    {
+                        featureStates.Add(k, v);
+                    }
+                }
                 break;
             case Exit:
                 AnsiConsole.Clear();

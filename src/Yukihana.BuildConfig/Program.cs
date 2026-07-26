@@ -51,9 +51,9 @@ internal class Program
 
         Globals.Args.ConfigureCommand.SetAction(Wrap(ConfigureManager.Handle));
         Globals.Args.MenuCommand.SetAction(Wrap(MenuCommandHandler.Handle));
-        // check handler
+        Globals.Args.CheckCommand.SetAction(Wrap(CheckCommandHandler.Handle));
         Globals.Args.ValidateCommand.SetAction(Wrap(ValidateHandler.Handle));
-        // clean handler
+        Globals.Args.CleanCommand.SetAction(Wrap(CleanCommandHandler.Handle));
         Globals.Args.ListCommand.SetAction(Wrap(ListCommandHandler.Handle));
 
         Globals.Args.ListSubcommand.SetAction(Wrap(PresetCommandHandler.HandleList));
@@ -63,7 +63,7 @@ internal class Program
         Globals.Args.DisableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleDisable));
 
         Globals.Args.InfoCommand.SetAction(Wrap(InfoCommandHandler.Handle));
-        // TODO: graph handler
+        // TODO: graph handler (gonna delay)
         Globals.Args.InitCommand.SetAction(Wrap(InitCommandHandler.Handle));
 
         Globals.Args.RootCmd.Validators.Add(result =>

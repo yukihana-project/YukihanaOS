@@ -1,4 +1,4 @@
-description = "Debug configuration"
+description = "Maximal configuration"
 
 enabled = [
     "init_ram_fs",

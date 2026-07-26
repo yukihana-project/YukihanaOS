@@ -24,42 +24,52 @@ internal static class Globals
         public static Option<bool> VerboseOption { get; set; } = new("--verbose", "-v")
         {
             Description = "Enable verbose output.",
+            Recursive = true
         };
         public static Option<bool> QuietOption { get; set; } = new("--quiet", "-q")
         {
-            Description = "Suppress non-error output."
+            Description = "Suppress non-error output.",
+            Recursive = true
         };
 
         public static Option<bool> NoColorOption { get; set; } = new("--no-color")
         {
-            Description = "Disable ASNI colors."
+            Description = "Disable ASNI colors.",
+            Recursive = true
         };
         public static Option<string> FeaturesPathOption { get; set; } = new("--features")
         {
             Description = "Path to Features directory",
             HelpName = "path",
+            Recursive = true
         };
         public static Option<string> ManifestPathOption { get; set; } = new("--manifest")
         {
             Description = "Path to Manifest.toml",
-            HelpName = "path"
+            HelpName = "path",
+            Recursive = true
         };
         public static Option<string> ConfigsPathOption { get; set; } = new("--configs")
         {
             Description = "Path to configs directory",
-            HelpName = "path"
+            HelpName = "path",
+            Recursive = true
         };
         public static Option<string> GeneratedPathOption { get; set; } = new("--generated", "-o")
         {
             Description = "Path to generated output directory",
-            HelpName = "path"
+            HelpName = "path",
+            Recursive = true
         };
 
         #endregion
 
         #region 'configure' command
 
-        public static Argument<string?> PresetArgument { get; set; } = new("preset");
+        public static Argument<string?> PresetArgument { get; set; } = new("preset")
+        {
+            Arity = ArgumentArity.ZeroOrOne
+        };
 
         public static Option<bool> InteractiveOption { get; set; } = new("--interactive", "-i")
         {

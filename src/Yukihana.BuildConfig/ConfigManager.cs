@@ -15,11 +15,16 @@ internal static class ConfigManager
     public static Dictionary<string, PresetConfig> PresetConfigs { get; set; } = [];
     public static StateConfig? StateConfig { get; set; } = new();
     private static bool s_hasLoadedConfigs = false;
+    private static bool s_hasLoadedConfigState = false;
 
     public static void LoadConfigs(bool ensureHasState = true)
     {
         if (s_hasLoadedConfigs)
         {
+            if (!s_hasLoadedConfigState && ensureHasState)
+            {
+                goto __load_state;
+            }
             return;
         }
 
@@ -59,15 +64,15 @@ internal static class ConfigManager
             return;
         }
 
+    __load_state:
+
+        s_hasLoadedConfigState = true;
+
         try
         {
-            using (FileStream fs = File.Open(Globals.GetManifestClosePath("Current.toml"), FileMode.Open, FileAccess.Read, FileShare.None))
+            using (FileStream fs = File.Open(Globals.GetManifestClosePath("Current.toml"), FileMode.Open, FileAccess.Read, FileShare.Read))
             {
                 CurrentConfig = TomlSerializer.Deserialize<CurrentConfig>(fs, CurrentConfigContext.Default);
-            }
-            using (FileStream fs = File.Open(Globals.GetManifestClosePath("State.toml"), FileMode.Open, FileAccess.Read, FileShare.None))
-            {
-                StateConfig = TomlSerializer.Deserialize<StateConfig>(fs, StateConfigContext.Default);
             }
         }
         catch (Exception ex)
@@ -82,10 +87,16 @@ internal static class ConfigManager
             Environment.Exit(1);
         }
 
-        if (StateConfig is null)
+        try
         {
-            Log.Fatal("Unable to parse State.toml. Please, configure the build first");
-            Environment.Exit(1);
+            using (FileStream fs = File.Open(Globals.GetManifestClosePath("State.toml"), FileMode.Open, FileAccess.Read, FileShare.Read))
+            {
+                StateConfig = TomlSerializer.Deserialize<StateConfig>(fs, StateConfigContext.Default);
+            }
+        }
+        catch
+        {
+
         }
     }
 

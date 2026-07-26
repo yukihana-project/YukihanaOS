@@ -10,6 +10,7 @@ namespace Yukihana.BuildConfig.Toml;
 internal sealed class CurrentConfig
 {
     public int Version { get; set; } = 1;
+    public string? Config { get; set; }
     public List<string>? Enabled { get; set; } = [];
 }
 
