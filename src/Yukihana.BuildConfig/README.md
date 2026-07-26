@@ -92,7 +92,6 @@ public static class Configuration
     /// </summary>
     public static string GeneratedTargetsFilePath => Path.Combine(OutputDirectoryPath, "Features.g.targets");
 }
-
 ```
 
 ### Configuring your project
