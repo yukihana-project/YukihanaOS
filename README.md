@@ -154,11 +154,11 @@ cosmos build -p src/Yukihana -c Release --a x64
 
 Replace `Release` with `Debug`, and `x64` with `arm64` as needed. Also, for verbose building use `-v` flag.
 
+Then build the project. Replace `<preset>` with configuration (full, minimal, debug):
+
 ### Windows
 
 Install CosmosOS Gen3 using the installer provided by its releases.
-
-Then build the project. Replace `<preset>` with configuration (full, minimal, debug):
 
 ```bash
 git clone https://github.com/zimavi/Yukihana.git
