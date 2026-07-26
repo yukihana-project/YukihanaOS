@@ -162,6 +162,7 @@ cd Yukihana
 
 cd src/Yukihana
 dotnet build ../Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+./ykconfig init
 ./ykconfig configure <preset>
 
 cosmos build -p src/Yukihana -c Release --a x64
