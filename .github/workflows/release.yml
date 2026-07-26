@@ -27,7 +27,6 @@ jobs:
           - arm64
         preset:
           - full
-          - minimal
 
     steps:
       - name: Checkout
