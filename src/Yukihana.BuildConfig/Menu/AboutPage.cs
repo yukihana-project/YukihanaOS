@@ -19,7 +19,7 @@ internal static class AboutPage
         string selected = AnsiConsole.Prompt(new SelectionPrompt<string>()
             .PageSize(3)
             .AddChoices(["Back", "Exit"]));
-        
+
         switch (selected)
         {
             case "Back":
