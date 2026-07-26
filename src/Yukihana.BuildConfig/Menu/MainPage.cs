@@ -27,6 +27,7 @@ internal static class MainPage
             //"Validate",
             //"Generate",
             //"Clean",
+            "About",
             "Exit"
         ];
 
@@ -44,6 +45,10 @@ internal static class MainPage
             case "Validate":
             case "Generate":
             case "Clean":
+                break;
+            case "About":
+                AboutPage.Show();
+                break;
             case "Exit":
                 AnsiConsole.Clear();
                 Environment.Exit(0);
