@@ -41,5 +41,5 @@ description = "Enables kernel to log to serial port"
 define = "FEATURE_SERIAL_SINK"
 
 exclude = [
-    "Debug/Sinks/ConsoleSink.cs"
+    "Debug/Sinks/SerialSink.cs"
 ]
