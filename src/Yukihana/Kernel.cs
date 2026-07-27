@@ -78,7 +78,9 @@ public sealed class Kernel : Sys.Kernel
         //
 
         LogDispatcher.RegisterSink(new ConsoleSink(), new DeltaAnsiFormatter());
+#if FEATURE_SERIAL_SINK
         LogDispatcher.RegisterSink(new SerialSink(), new DeltaFormatter());
+#endif
 
         // Setup formatters and sinks
         var logger = new Logger("init");

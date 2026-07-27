@@ -1,0 +1,5 @@
+description = "Minimal runnable configuration"
+
+enabled = [
+    "init_ram_fs"
+]
