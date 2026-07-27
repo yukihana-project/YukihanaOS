@@ -16,7 +16,7 @@ internal class CustomHelpAction(HelpAction action) : SynchronousCommandLineActio
         int result = _defaultHelp.Invoke(parseResult);
 
         Console.WriteLine("About config .toml files, please visit wiki:");
-        Console.WriteLine("  Unfortunately, this is still WIP :(");
+        Console.WriteLine("  https://github.com/yukihana-project/YukihanaOS/blob/master/src/Yukihana.BuildConfig/README.md");
 
         return result;
     }
