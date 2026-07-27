@@ -15,6 +15,7 @@ name = "Drivers"
 [[group]]
 id = "drivers.filesystems"
 name = "Filesystems"
+parent = "drivers"
 
 [[group]]
 id = "debug"
@@ -47,6 +48,7 @@ group = "debug.logger"
 description = "Enables kernel to log to serial port"
 
 define = "FEATURE_SERIAL_SINK"
+enabled_by_default = true
 
 exclude = [
     "Debug/Sinks/SerialSink.cs"
