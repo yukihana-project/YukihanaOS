@@ -1,6 +1,7 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
+#if FEATURE_EXT4
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -56,3 +57,4 @@ public sealed class Ext4Probe : IFilesystemProbe
         return true;
     }
 }
+#endif

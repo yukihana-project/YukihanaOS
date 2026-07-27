@@ -9,6 +9,14 @@ id = "kernel"
 name = "Kernel"
 
 [[group]]
+id = "drivers"
+name = "Drivers"
+
+[[group]]
+id = "drivers.filesystems"
+name = "Filesystems"
+
+[[group]]
 id = "debug"
 name = "Debug"
 
@@ -42,4 +50,18 @@ define = "FEATURE_SERIAL_SINK"
 
 exclude = [
     "Debug/Sinks/SerialSink.cs"
+]
+
+[[feature]]
+id = "ext4"
+name = "Ext4"
+group = "drivers.filesystems"
+
+description = "Enables ext4 driver"
+
+define = "FEATURE_EXT4"
+
+exclude = [
+    "Vfs/Probe/Filesystem/Ext4Probe.cs",
+    "Vfs/Filesystem/Ext4/**/*",
 ]
