@@ -21,7 +21,7 @@ internal static class SourceGenerator
     private const string EXCLUDE_ITEM_TEMPLATE = "_YKConfig_ExcludeFeature_{0}";
     private const string INCLUDE_ITEM_TEMPLATE = "_YKConfig_IncludeFeature_{0}";
 
-    
+
     private const string INTERNAL_RAMFS_TARGET = "_YKConfig_Internal_IncludeInitRamFs";
 
     public static void GenerateFromCurrent()
@@ -199,7 +199,7 @@ internal static class SourceGenerator
             .After(INTERNAL_EXCLUDE_TARGET)
             .Message("Including Features.g.cs", TargetsFileGenerator.Importance.Low)
             .IncludeCompile(Configuration.GeneratedCsFilePath);
-        
+
         if (Configuration.Features.BuildInitRamFs)
         {
             BuildRamFs(generator);
