@@ -243,6 +243,11 @@ internal static class SourceGenerator
 
     private static void BuildRamFs(TargetsFileGenerator generator)
     {
+        if (!Directory.Exists(Configuration.DefaultInitRamFsPath) || !Directory.Exists(Configuration.LocalInitRamFsPath))
+        {
+            Log.Warning("Unable to create initramfs as no directories exists. Run init command.");
+            return;
+        }
 
         var target = generator.AddTarget(INTERNAL_RAMFS_TARGET)
                         .Before("PrepareForBuild")
@@ -296,16 +301,21 @@ internal static class SourceGenerator
             archive.SaveAll(fs, entries, ArchiveFormat.NewAscii);
         }
 
-        Log.Verbose("Creating archive at {ArchiveOutputPath}", Configuration.GeneratedInitRamFsPath);
-        using (FileStream sourceStream = File.OpenRead(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio")))
+        try
         {
-            using FileStream archiveStream = File.Create(Configuration.GeneratedInitRamFsPath);
-            using GZipStream gZip = new(archiveStream, CompressionLevel.Optimal);
+            Log.Verbose("Creating archive at {ArchiveOutputPath}", Configuration.GeneratedInitRamFsPath);
+            using (FileStream sourceStream = File.OpenRead(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio")))
+            {
+                using FileStream archiveStream = File.Create(Configuration.GeneratedInitRamFsPath);
+                using GZipStream gZip = new(archiveStream, CompressionLevel.Optimal);
 
-            sourceStream.CopyTo(gZip);
+                sourceStream.CopyTo(gZip);
+            }
         }
-
-        File.Delete(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio"));
+        finally
+        {
+            File.Delete(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio"));
+        }
 
         // Embed file
 
