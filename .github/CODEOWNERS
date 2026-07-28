@@ -2,25 +2,25 @@
 # See https://docs.github.com/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Default owner for the entire repository.
-* @zimavi
+* @yukihana-project/core
 
 # GitHub configuration
-/.github/ @zimavi
+/.github/ @yukihana-project/core
 
 # Source code
-/src/ @zimavi
+/src/ @yukihana-project/core
+
+# Yukihana
+/src/Yukihana/ yukihana-project/core
+
+# YKConfig
+/src/Yukihana.BuildConfig/ yukihana-project/core
 
 # Documentation
-*.md @zimavi
+*.md @yukihana-project/core
 
 # Repository metadata
-/LICENSE* @zimavi
-/NOTICE @zimavi
-/.editorconfig @zimavi
-/.gitignore @zimavi
-
-# Solution files
-/*.sln @zimavi
-/*.slnx @zimavi
-/*.props @zimavi
-/*.targets @zimavi
+/LICENSE* @yukihana-project/core
+/NOTICE @yukihana-project/core
+/.editorconfig @yukihana-project/core
+/.gitignore @yukihana-project/core
