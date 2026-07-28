@@ -304,13 +304,11 @@ internal static class SourceGenerator
         try
         {
             Log.Verbose("Creating archive at {ArchiveOutputPath}", Configuration.GeneratedInitRamFsPath);
-            using (FileStream sourceStream = File.OpenRead(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio")))
-            {
-                using FileStream archiveStream = File.Create(Configuration.GeneratedInitRamFsPath);
-                using GZipStream gZip = new(archiveStream, CompressionLevel.Optimal);
+            using FileStream sourceStream = File.OpenRead(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio"));
+            using FileStream archiveStream = File.Create(Configuration.GeneratedInitRamFsPath);
+            using GZipStream gZip = new(archiveStream, CompressionLevel.Optimal);
 
-                sourceStream.CopyTo(gZip);
-            }
+            sourceStream.CopyTo(gZip);
         }
         finally
         {
