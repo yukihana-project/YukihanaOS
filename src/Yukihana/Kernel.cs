@@ -42,40 +42,6 @@ public sealed class Kernel : Sys.Kernel
     private static readonly Logger s_kernelLogger;
     private static readonly VfsConfigManager s_vfsMan;
 
-    public static readonly SecurityContext KernelContext = new()
-    {
-        RealUser = UserId.Root,
-        EffectiveUser = UserId.Root,
-        SavedUser = UserId.Root,
-
-        RealGroup = GroupId.Root,
-        EffectiveGroup = GroupId.Root,
-        SavedGroup = GroupId.Root,
-
-        SupplementaryGroups = [],
-
-        Capabilities = CapabilitySet.Root,
-
-        IsKernel = true
-    };
-
-    public static readonly SecurityContext RootContext = new()
-    {
-        RealUser = UserId.Root,
-        EffectiveUser = UserId.Root,
-        SavedUser = UserId.Root,
-
-        RealGroup = GroupId.Root,
-        EffectiveGroup = GroupId.Root,
-        SavedGroup = GroupId.Root,
-
-        SupplementaryGroups = [GroupId.Root],
-
-        Capabilities = CapabilitySet.Root,
-
-        IsKernel = false
-    };
-
     public static readonly SecurityManager SecurityManager = new();
 
     static Kernel()
@@ -121,7 +87,7 @@ public sealed class Kernel : Sys.Kernel
         // Setup formatters and sinks
         var logger = new Logger("init");
 
-        SecurityManager.Set(Thread.CurrentThread, KernelContext);
+        SecurityManager.Set(Thread.CurrentThread, SecurityContextFactory.CreateKernelContext());
 
         logger.Trace("Parsed arguments:");
 
