@@ -1,6 +1,7 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
+using System.Collections.Immutable;
 using System.Data;
 using System.Reflection;
 using Cosmos.Kernel.HAL.Vfs;
@@ -31,9 +32,6 @@ namespace Yukihana;
 
 public sealed class Kernel : Sys.Kernel
 {
-    public static AuthService AuthService { get; private set; } = null!;
-    public static UserSession UserSession { get; private set; } = null!;
-
     public static DateTime BootTime { get; }
 
     private const string RAMFS_PATH = "Yukihana";
@@ -43,6 +41,42 @@ public sealed class Kernel : Sys.Kernel
 
     private static readonly Logger s_kernelLogger;
     private static readonly VfsConfigManager s_vfsMan;
+
+    public static readonly SecurityContext KernelContext = new()
+    {
+        RealUser = UserId.Root,
+        EffectiveUser = UserId.Root,
+        SavedUser = UserId.Root,
+
+        RealGroup = GroupId.Root,
+        EffectiveGroup = GroupId.Root,
+        SavedGroup = GroupId.Root,
+
+        SupplementaryGroups = [],
+
+        Capabilities = CapabilitySet.Root,
+
+        IsKernel = true
+    };
+
+    public static readonly SecurityContext RootContext = new()
+    {
+        RealUser = UserId.Root,
+        EffectiveUser = UserId.Root,
+        SavedUser = UserId.Root,
+
+        RealGroup = GroupId.Root,
+        EffectiveGroup = GroupId.Root,
+        SavedGroup = GroupId.Root,
+
+        SupplementaryGroups = [GroupId.Root],
+
+        Capabilities = CapabilitySet.Root,
+
+        IsKernel = false
+    };
+
+    public static readonly SecurityManager SecurityManager = new();
 
     static Kernel()
     {
@@ -84,6 +118,8 @@ public sealed class Kernel : Sys.Kernel
 
         // Setup formatters and sinks
         var logger = new Logger("init");
+
+        SecurityManager.Set(Thread.CurrentThread, KernelContext);
 
         logger.Trace("Parsed arguments:");
 
@@ -222,6 +258,8 @@ public sealed class Kernel : Sys.Kernel
         */
 
         logger.Info($"Base kernel initialization finished at {DateTime.Now:dd-MM-yyyy HH:mm:ss.fff}.");
+
+
 
         throw new Exception("Returned from init");
     }

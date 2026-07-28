@@ -3,9 +3,9 @@
 
 namespace Yukihana.Security;
 
-public sealed class Group
+public sealed class UserDatabase
 {
-    public required GroupId Id { get; init; }
+    public IList<User> Users { get; } = [];
 
-    public required string Name { get; init; }
+    public IList<Group> Groups { get; } = [];
 }
