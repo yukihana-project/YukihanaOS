@@ -36,7 +36,7 @@ public sealed class Kernel : Sys.Kernel
 
     public static DateTime BootTime { get; }
 
-    private const string RAMFS_PATH = "Yukihana.Resources";
+    private const string RAMFS_PATH = "Yukihana";
     private const string RAMFS_FILE = "initramfs.cpio.gz";
 
     private static string _ramfs_resource_key => string.Join('.', RAMFS_PATH, RAMFS_FILE);

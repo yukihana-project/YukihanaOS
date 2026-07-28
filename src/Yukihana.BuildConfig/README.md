@@ -29,22 +29,28 @@ This path is where the executable will be placed after it is built and published
 After that, you need to edit `Configuration.cs` file. Here is snippet
 
 ```cs
+/// <summary>
+/// This class holds tool's configuration like paths
+/// Edit this, to change some behaviour to what suits you
+/// </summary>
 public static class Configuration
 {
+    public static readonly string BaseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+
     /// <summary>
     /// Directory where the tool stores all of its files.
     /// </summary>
-    public static readonly string ToolFolder = "./Build/";
+    public static string ToolFolder => Path.Combine(BaseDirectory, "Build");
 
     /// <summary>
     /// Directory, where presets (combination of features) are defined.
     /// </summary>
-    public static string ConfigsDirectoryPath => Path.Combine(ToolFolder, "Configs/");
+    public static string ConfigsDirectoryPath => Path.Combine(ToolFolder, "Configs");
 
     /// <summary>
     /// Output directory for generated files.
     /// </summary>
-    public static string OutputDirectoryPath => Path.Combine(ToolFolder, "Generated/");
+    public static string OutputDirectoryPath => Path.Combine(ToolFolder, "Generated");
 
     /// <summary>
     /// File path where tool's manifest is located.
@@ -91,6 +97,45 @@ public static class Configuration
     /// Path to generated .targets file that manages build (Must be included into build via tag).
     /// </summary>
     public static string GeneratedTargetsFilePath => Path.Combine(OutputDirectoryPath, "Features.g.targets");
+
+    /// <summary>
+    /// Path to the source initramfs folders. Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public static string InitRamFsSourcePath => Path.Combine(ToolFolder, "InitRamFs");
+
+    /// <summary>
+    /// Path to the default initramfs source. Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public static string DefaultInitRamFsPath => Path.Combine(InitRamFsSourcePath, "default");
+
+    /// <summary>
+    /// Path to the local initramfs source. If exists, and has contents, this will be used instead of default one.
+    /// Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public static string LocalInitRamFsPath => Path.Combine(InitRamFsSourcePath, "local");
+
+    /// <summary>
+    /// Path where generated initramfs will be stored. Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public static string GeneratedInitRamFsPath => Path.Combine(OutputDirectoryPath, "initramfs.cpio.gz");
+
+    /// <summary>
+    /// Logical name for generated initramfs to use with GetManifestResourceStream
+    /// Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public const string InitRamFsLogicalName = "Yukihana.initramfs.cpio.gz";
+
+    /// <summary>
+    /// YKConfig specific feature switches
+    /// </summary>
+    public static class Features
+    {
+        /// <summary>
+        /// Adds target to build initram cpio.gz archive from default directory,
+        /// or from local directory if present
+        /// </summary>
+        public const bool BuildInitRamFs = true;
+    }
 }
 ```
 
@@ -181,3 +226,43 @@ For configuring your project this is it. Don't forget to include generated `.tar
 
 > [!NOTE]
 > Do not place anything inside `Generated` folder, as during the `clean` command, its contents will be deleted
+
+## Features
+
+The YKConfig contains toggleable features like `BuildInitRamFs`, which are useful in some cases, but can be anoying if you don't require them.
+Here are descriptions of existing features:
+
+### BuildInitRamFs
+
+This feature uses following config variables:
+```cs
+/// <summary>
+/// Path to the source initramfs folders. Requires <see cref="Features.BuildInitRamFs"/> to be true
+/// </summary>
+public static string InitRamFsSourcePath => Path.Combine(ToolFolder, "InitRamFs");
+
+/// <summary>
+/// Path to the default initramfs source. Requires <see cref="Features.BuildInitRamFs"/> to be true
+/// </summary>
+public static string DefaultInitRamFsPath => Path.Combine(InitRamFsSourcePath, "default");
+
+/// <summary>
+/// Path to the local initramfs source. If exist, and has contents, this will be used instead of default one.
+/// Requires <see cref="Features.BuildInitRamFs"/> to be true
+/// </summary>
+public static string LocalInitRamFsPath => Path.Combine(InitRamFsSourcePath, "local");
+
+/// <summary>
+/// Path where generated initramfs will be stored. Requires <see cref="Features.BuildInitRamFs"/> to be true
+/// </summary>
+public static string GeneratedInitRamFsPath => Path.Combine(OutputDirectoryPath, "initramfs.cpio.gz");
+
+/// <summary>
+/// Logical name for generated initramfs to use with GetManifestResourceStream
+/// Requires <see cref="Features.BuildInitRamFs"/> to be true
+/// </summary>
+public const string InitRamFsLogicalName = "Yukihana.initramfs.cpio.gz";
+```
+
+If enabled, when you configure project, it will look at `Build/InitRamFs` (or your configured path) directory to look for `default` and `local` variants.
+`default` is designed to be included in repository, and ship basic initramfs for your Cosmos operating system. If you need your local variant, create and place files inside `local` directory, and YKConfig will prefer it over `default`. The `InitRamFsLogicalName` is a key, which can be passed to `Assembly.GetManifestResourceStream()` to get your data.
