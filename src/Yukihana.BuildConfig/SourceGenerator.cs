@@ -243,7 +243,7 @@ internal static class SourceGenerator
 
     private static void BuildRamFs(TargetsFileGenerator generator)
     {
-        if (!Directory.Exists(Configuration.DefaultInitRamFsPath) || !Directory.Exists(Configuration.LocalInitRamFsPath))
+        if (!Directory.Exists(Configuration.DefaultInitRamFsPath) && !Directory.Exists(Configuration.LocalInitRamFsPath))
         {
             Log.Warning("Unable to create initramfs as no directories exists. Run init command.");
             return;
