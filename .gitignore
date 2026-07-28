@@ -16,3 +16,6 @@ src/Yukihana/Build/State.toml
 
 # Generated files
 Generated/
+
+# Local initramfs
+src/Yukihana/Build/InitRamFs/local

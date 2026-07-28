@@ -67,6 +67,7 @@
     <PackageReference Include="Serilog" Version="4.4.0" />
     <PackageReference Include="Spectre.Console" Version="0.57.2" />
     <PackageReference Include="Serilog.Sinks.Spectre" Version="0.6.0" />
+    <PackageReference Include="FirmwareKit.CPIO" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

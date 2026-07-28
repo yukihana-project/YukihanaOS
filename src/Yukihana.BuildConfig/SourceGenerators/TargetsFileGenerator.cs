@@ -185,6 +185,11 @@ internal sealed class TargetsFileGenerator
         public TargetDefinition DefineConstants(params string[] constants)
             => DefineConstants((IEnumerable<string>)constants);
 
+        public TargetDefinition EmbedResource(string path, string? logicalName = null, string? condition = null)
+        {
+            _embededFiles.Add(new(path, logicalName, condition));
+            return this;
+        }
 
         public override void Write(StringBuilder sb, int indent)
         {
@@ -263,7 +268,7 @@ internal sealed class TargetsFileGenerator
                         sb.Append("\" ");
                     }
 
-                    sb.Append("/>");
+                    sb.AppendLine("/>");
                 }
 
                 WriteIndent(sb, indent + 1);

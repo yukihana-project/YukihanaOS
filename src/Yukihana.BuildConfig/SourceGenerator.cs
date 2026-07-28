@@ -2,8 +2,11 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE for details.
 
 using System.Globalization;
+using System.IO.Compression;
 using System.Security.Cryptography;
 using System.Text;
+using FirmwareKit.CPIO;
+using FirmwareKit.CPIO.Model;
 using Serilog;
 using Tomlyn;
 using Yukihana.BuildConfig.SourceGenerators;
@@ -13,6 +16,14 @@ namespace Yukihana.BuildConfig;
 
 internal static class SourceGenerator
 {
+    private const string INTERNAL_EXCLUDE_TARGET = "_YKConfig_Internal_ExcludeGeneratedFiles";
+    private const string INTERNAL_INCLUDE_SOURCE_TARGET = "_YKConfig_Internal_IncludeGeneratedSource";
+    private const string EXCLUDE_ITEM_TEMPLATE = "_YKConfig_ExcludeFeature_{0}";
+    private const string INCLUDE_ITEM_TEMPLATE = "_YKConfig_IncludeFeature_{0}";
+
+    
+    private const string INTERNAL_RAMFS_TARGET = "_YKConfig_Internal_IncludeInitRamFs";
+
     public static void GenerateFromCurrent()
     {
         ConfigManager.LoadConfigs();
@@ -174,12 +185,6 @@ internal static class SourceGenerator
     {
         TargetsFileGenerator generator = TargetsFileGenerator.Create();
 
-        const string INTERNAL_EXCLUDE_TARGET = "_YKConfig_Internal_ExcludeGeneratedFiles";
-        const string INTERNAL_INCLUDE_SOURCE_TARGET = "_YKConfig_Internal_IncludeGeneratedSource";
-
-        const string EXCLUDE_ITEM_TEMPLATE = "_YKConfig_ExcludeFeature_{0}";
-        const string INCLUDE_ITEM_TEMPLATE = "_YKConfig_IncludeFeature_{0}";
-
         const string TARGET_BEFORE = "CoreCompile";
 
         Log.Verbose("Generating internal targets");
@@ -194,6 +199,11 @@ internal static class SourceGenerator
             .After(INTERNAL_EXCLUDE_TARGET)
             .Message("Including Features.g.cs", TargetsFileGenerator.Importance.Low)
             .IncludeCompile(Configuration.GeneratedCsFilePath);
+        
+        if (Configuration.Features.BuildInitRamFs)
+        {
+            BuildRamFs(generator);
+        }
 
         var enabledIds = graph
             .Select(rn => rn.Id)
@@ -229,5 +239,76 @@ internal static class SourceGenerator
         }
 
         return generator.Generate();
+    }
+
+    private static void BuildRamFs(TargetsFileGenerator generator)
+    {
+
+        var target = generator.AddTarget(INTERNAL_RAMFS_TARGET)
+                        .Before(INTERNAL_INCLUDE_SOURCE_TARGET)
+                        .After(INTERNAL_EXCLUDE_TARGET);
+
+        // Get directory to build
+
+        string defaultDirPath = Configuration.DefaultInitRamFsPath;
+        string localDirPath = Configuration.LocalInitRamFsPath;
+
+        string targetInitPath = defaultDirPath;
+
+        if (Directory.Exists(localDirPath) && Directory.GetFileSystemEntries(localDirPath).Length > 0)
+        {
+            targetInitPath = localDirPath;
+        }
+
+        // Make initramfs.cpio.gz
+
+        string root = targetInitPath;
+
+        var entries = new List<ArchiveEntry>();
+
+        foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+        {
+            string name = Path.GetRelativePath(root, file)
+                            .Replace('\\', '/');
+
+            Log.Verbose("Adding directory {CpioFile} to initramfs", name);
+
+            entries.Add(new ArchiveEntry
+            {
+                Name = name,
+                Data = File.ReadAllBytes(file),
+                Metadata = new ArchiveEntryMetadata
+                {
+                    FileType = CpioFileType.Regular,
+                    UnixPermissions = 0x1a4, // 0644 | rw-r--r--
+                    LinkCount = 1,
+                    ModificationTimeUnixSeconds =
+                        new DateTimeOffset(File.GetLastWriteTimeUtc(file))
+                            .ToUnixTimeSeconds(),
+                }
+            });
+        }
+
+        var archive = new CpioArchive();
+
+        using (FileStream fs = File.Create(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio")))
+        {
+            archive.SaveAll(fs, entries, ArchiveFormat.NewAscii);
+        }
+
+        Log.Verbose("Creating archive at {ArchiveOutputPath}", Configuration.GeneratedInitRamFsPath);
+        using (FileStream sourceStream = File.OpenRead(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio")))
+        {
+            using FileStream archiveStream = File.Create(Configuration.GeneratedInitRamFsPath);
+            using GZipStream gZip = new(archiveStream, CompressionLevel.Optimal);
+
+            sourceStream.CopyTo(gZip);
+        }
+
+        File.Delete(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio"));
+
+        // Embed file
+
+        target.EmbedResource(Configuration.GeneratedInitRamFsPath, Configuration.InitRamFsLogicalName, $"Exists('{Configuration.GeneratedInitRamFsPath}')");
     }
 }

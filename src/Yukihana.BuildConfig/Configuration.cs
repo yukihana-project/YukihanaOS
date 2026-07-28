@@ -71,4 +71,43 @@ public static class Configuration
     /// Path to generated .targets file that manages build (Must be included into build via tag).
     /// </summary>
     public static string GeneratedTargetsFilePath => Path.Combine(OutputDirectoryPath, "Features.g.targets");
+
+    /// <summary>
+    /// Path to the source initramfs folders. Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public static string InitRamFsSourcePath => Path.Combine(ToolFolder, "InitRamFs/");
+
+    /// <summary>
+    /// Path to the default initramfs source. Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public static string DefaultInitRamFsPath => Path.Combine(InitRamFsSourcePath, "default/");
+
+    /// <summary>
+    /// Path to the local initramfs source. If exists, and has contents, this will be used instead of default one.
+    /// Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public static string LocalInitRamFsPath => Path.Combine(InitRamFsSourcePath, "local/");
+
+    /// <summary>
+    /// Path where generated initramfs will be stored. Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public static string GeneratedInitRamFsPath => Path.Combine(OutputDirectoryPath, "initramfs.cpio.gz");
+
+    /// <summary>
+    /// Logical name for generated initramfs to use with GetManifestResourceStream
+    /// Requires <see cref="Features.BuildInitRamFs"/> to be true
+    /// </summary>
+    public const string InitRamFsLogicalName = "Yukihana.initramfs.cpio.gz";
+
+    /// <summary>
+    /// YKConfig specific feature switches
+    /// </summary>
+    public static class Features
+    {
+        /// <summary>
+        /// Adds target to build initram cpio.gz archive from default directory,
+        /// or from local directory if present
+        /// </summary>
+        public const bool BuildInitRamFs = true;
+    }
 }
