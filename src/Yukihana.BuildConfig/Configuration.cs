@@ -14,17 +14,17 @@ public static class Configuration
     /// <summary>
     /// Directory where the tool stores all of its files.
     /// </summary>
-    public static string ToolFolder => Path.Combine(BaseDirectory, "Build/");
+    public static string ToolFolder => Path.Combine(BaseDirectory, "Build");
 
     /// <summary>
     /// Directory, where presets (combination of features) are defined.
     /// </summary>
-    public static string ConfigsDirectoryPath => Path.Combine(ToolFolder, "Configs/");
+    public static string ConfigsDirectoryPath => Path.Combine(ToolFolder, "Configs");
 
     /// <summary>
     /// Output directory for generated files.
     /// </summary>
-    public static string OutputDirectoryPath => Path.Combine(ToolFolder, "Generated/");
+    public static string OutputDirectoryPath => Path.Combine(ToolFolder, "Generated");
 
     /// <summary>
     /// File path where tool's manifest is located.
@@ -75,18 +75,18 @@ public static class Configuration
     /// <summary>
     /// Path to the source initramfs folders. Requires <see cref="Features.BuildInitRamFs"/> to be true
     /// </summary>
-    public static string InitRamFsSourcePath => Path.Combine(ToolFolder, "InitRamFs/");
+    public static string InitRamFsSourcePath => Path.Combine(ToolFolder, "InitRamFs");
 
     /// <summary>
     /// Path to the default initramfs source. Requires <see cref="Features.BuildInitRamFs"/> to be true
     /// </summary>
-    public static string DefaultInitRamFsPath => Path.Combine(InitRamFsSourcePath, "default/");
+    public static string DefaultInitRamFsPath => Path.Combine(InitRamFsSourcePath, "default");
 
     /// <summary>
     /// Path to the local initramfs source. If exist, and has contents, this will be used instead of default one.
     /// Requires <see cref="Features.BuildInitRamFs"/> to be true
     /// </summary>
-    public static string LocalInitRamFsPath => Path.Combine(InitRamFsSourcePath, "local/");
+    public static string LocalInitRamFsPath => Path.Combine(InitRamFsSourcePath, "local");
 
     /// <summary>
     /// Path where generated initramfs will be stored. Requires <see cref="Features.BuildInitRamFs"/> to be true
