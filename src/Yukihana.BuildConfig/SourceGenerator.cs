@@ -271,7 +271,7 @@ internal static class SourceGenerator
 
         var entries = new List<ArchiveEntry>();
 
-        foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+        foreach (string file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).OrderBy(f => f))
         {
             string name = Path.GetRelativePath(root, file)
                             .Replace('\\', '/');
