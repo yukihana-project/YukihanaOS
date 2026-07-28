@@ -31,17 +31,23 @@ jobs:
               uses: actions/setup-dotnet@v6
               with:
                 dotnet-version: ${{ matrix.dotnet-version }}
-
-            - name: 📦 Cache NuGet packages
-              uses: actions/cache@v6
-              with:
-                path: ~/.nuget/packages
-                key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-                restore-keys: |
-                  ${{ runner.os }}-nuget-
+                cache: true
+                cache-dependency-path: |
+                  **/*.csproj
+                  **/*.props
+                  **/*.targets
+                  **/NuGet.config
 
             - name: 🛣️ Add .NET tools to PATH
               run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+
+            - name: 📦 Cache Cosmos tools
+              uses: actions/cache@v6
+              with:
+                path: ~/.cosmos/tools
+                key: ${{ runner.os }}-cosmos-v1
+                restore-keys: |
+                  ${{ runner.os }}-cosmos-
 
             - name: 📦 Install Cosmos.Tools
               run: dotnet tool install -g Cosmos.Tools
@@ -49,9 +55,13 @@ jobs:
             - name: ⚙️ Install Cosmos packages & dependencies
               run: cosmos install -y
 
+            - name: 📦 Restore YKConfig
+              working-directory: src/Yukihana.BuildConfig
+              run: dotnet restore ./Yukihana.BuildConfig.csproj
+
             - name: 🛠 Build YKConfig
-              working-directory: src/Yukihana
-              run: dotnet build ../Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+              working-directory: src/Yukihana.BuildConfig
+              run: dotnet build ./Yukihana.BuildConfig.csproj
 
             - name: 📂 Init build configuration
               working-directory: src/Yukihana
