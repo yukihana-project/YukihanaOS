@@ -55,13 +55,11 @@ jobs:
             - name: ⚙️ Install Cosmos packages & dependencies
               run: cosmos install -y
 
-            - name: 📦 Restore YKConfig
-              working-directory: src/Yukihana.BuildConfig
-              run: dotnet restore ./Yukihana.BuildConfig.csproj
-
             - name: 🛠 Build YKConfig
               working-directory: src/Yukihana.BuildConfig
-              run: dotnet build ./Yukihana.BuildConfig.csproj
+              run: |
+                  dotnet restore
+                  dotnet build -c Release
 
             - name: 📂 Init build configuration
               working-directory: src/Yukihana
@@ -69,8 +67,8 @@ jobs:
 
             - name: ✒️ Configure build
               working-directory: src/Yukihana
-              run: ./ykconfig configure full -v
+              run: ./ykconfig configure full
 
             - name: 🚀 Build kernel (Release ${{ matrix.arch }})
               working-directory: src/Yukihana
-              run: cosmos build -v -c Release -a ${{ matrix.arch }}
+              run: cosmos build -c Release -a ${{ matrix.arch }}
