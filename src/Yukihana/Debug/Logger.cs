@@ -9,6 +9,19 @@ public sealed class Logger(string source)
 {
     private readonly string _source = source;
 
+    public static Logger GlobalLogger
+    {
+        get
+        {
+            if (field is null)
+            {
+                return new();
+            }
+            return field;
+        }
+        set;
+    } = null;
+
     public Logger() : this(string.Empty)
     { }
 

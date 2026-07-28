@@ -116,6 +116,8 @@ public sealed class Kernel : Sys.Kernel
         LogDispatcher.RegisterSink(new SerialSink(), new DeltaFormatter());
 #endif
 
+        Logger.GlobalLogger = s_kernelLogger;
+
         // Setup formatters and sinks
         var logger = new Logger("init");
 
