@@ -11,10 +11,10 @@
 /src/ @yukihana-project/core
 
 # Yukihana
-/src/Yukihana/ yukihana-project/core
+/src/Yukihana/ @yukihana-project/core
 
 # YKConfig
-/src/Yukihana.BuildConfig/ yukihana-project/core
+/src/Yukihana.BuildConfig/ @yukihana-project/core
 
 # Documentation
 *.md @yukihana-project/core
