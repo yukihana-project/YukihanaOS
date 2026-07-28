@@ -264,7 +264,7 @@ internal sealed class TargetsFileGenerator
                     if (item.Condition is not null)
                     {
                         sb.Append("Condition=\"");
-                        sb.Append(Escape(item.Condition));
+                        sb.Append(item.Condition);
                         sb.Append("\" ");
                     }
 

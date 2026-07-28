@@ -245,8 +245,8 @@ internal static class SourceGenerator
     {
 
         var target = generator.AddTarget(INTERNAL_RAMFS_TARGET)
-                        .Before(INTERNAL_INCLUDE_SOURCE_TARGET)
-                        .After(INTERNAL_EXCLUDE_TARGET);
+                        .Before("PrepareForBuild")
+                        .Message("Including initramfs.cpio.gz");
 
         // Get directory to build
 
