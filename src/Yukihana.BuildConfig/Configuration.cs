@@ -14,7 +14,7 @@ public static class Configuration
     /// <summary>
     /// Directory where the tool stores all of its files.
     /// </summary>
-    public static readonly string ToolFolder = Path.Combine(BaseDirectory, "Build/");
+    public static string ToolFolder => Path.Combine(BaseDirectory, "Build/");
 
     /// <summary>
     /// Directory, where presets (combination of features) are defined.
@@ -83,7 +83,7 @@ public static class Configuration
     public static string DefaultInitRamFsPath => Path.Combine(InitRamFsSourcePath, "default/");
 
     /// <summary>
-    /// Path to the local initramfs source. If exists, and has contents, this will be used instead of default one.
+    /// Path to the local initramfs source. If exist, and has contents, this will be used instead of default one.
     /// Requires <see cref="Features.BuildInitRamFs"/> to be true
     /// </summary>
     public static string LocalInitRamFsPath => Path.Combine(InitRamFsSourcePath, "local/");
