@@ -117,12 +117,15 @@ internal sealed class TargetsFileGenerator
 
     public sealed record MessageDefinition(string Text, Importance Importance);
 
+    public sealed record EmbeddedResourceDefinition(string Include, string? LogicalName = null, string? Condition = null);
+
     public sealed class TargetDefinition(string name) : ProjectElement
     {
         private readonly List<MessageDefinition> _messages = [];
         private readonly List<string> _compileIncludes = [];
         private readonly List<string> _compileRemoves = [];
         private readonly List<string> _defines = [];
+        private readonly List<EmbeddedResourceDefinition> _embededFiles = [];
 
         public string Name { get; } = name;
         public string? BeforeTargets { get; private set; }
@@ -218,7 +221,7 @@ internal sealed class TargetsFileGenerator
             }
 
 
-            if (_compileIncludes.Count != 0 || _compileRemoves.Count != 0)
+            if (_compileIncludes.Count != 0 || _compileRemoves.Count != 0 || _embededFiles.Count != 0)
             {
                 WriteIndent(sb, indent + 1);
                 sb.AppendLine("<ItemGroup>");
@@ -237,6 +240,30 @@ internal sealed class TargetsFileGenerator
                     sb.Append("<Compile Include=\"");
                     sb.Append(Escape(item));
                     sb.AppendLine("\" />");
+                }
+
+                foreach (EmbeddedResourceDefinition item in _embededFiles)
+                {
+                    WriteIndent(sb, indent + 2);
+                    sb.Append("<EmbeddedResource Include=\"");
+                    sb.Append(Escape(item.Include));
+                    sb.Append("\" ");
+
+                    if (item.LogicalName is not null)
+                    {
+                        sb.Append("LogicalName=\"");
+                        sb.Append(Escape(item.LogicalName));
+                        sb.Append("\" ");
+                    }
+
+                    if (item.Condition is not null)
+                    {
+                        sb.Append("Condition=\"");
+                        sb.Append(Escape(item.Condition));
+                        sb.Append("\" ");
+                    }
+
+                    sb.Append("/>");
                 }
 
                 WriteIndent(sb, indent + 1);
