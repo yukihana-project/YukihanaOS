@@ -1,4 +1,4 @@
-<Project Sdk="Cosmos.Sdk/3.0.77">
+<Project Sdk="Cosmos.Sdk/3.0.78">
   <PropertyGroup>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -20,8 +20,8 @@
     <Hour>$([System.DateTime]::UtcNow.ToString("HH"))</Hour>
     <Minute>$([System.DateTime]::UtcNow.ToString("mm"))</Minute>
 
-    <CosmosVersion>3, 0, 77</CosmosVersion>
-    <YukihanaVersion>2, 0, 14</YukihanaVersion>
+    <CosmosVersion>3, 0, 78</CosmosVersion>
+    <YukihanaVersion>2, 2, 0</YukihanaVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -79,8 +79,8 @@
 
   <!-- Core kernel packages -->
   <ItemGroup>
-    <PackageReference Include="Cosmos.Kernel" Version="3.0.77" />
-    <PackageReference Include="Cosmos.Kernel.System" Version="3.0.77" />
+    <PackageReference Include="Cosmos.Kernel" Version="3.0.78" />
+    <PackageReference Include="Cosmos.Kernel.System" Version="3.0.78" />
   </ItemGroup>
 
   <ItemGroup>
