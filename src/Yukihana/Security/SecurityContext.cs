@@ -35,13 +35,22 @@ public sealed record SecurityContext
         };
 
     public SecurityContext Elevate()
-        => this with
+    {
+        if (IsRoot)
         {
-            SavedUser = EffectiveUser,
-            SavedGroup = EffectiveGroup,
-            EffectiveUser = UserId.Root,
-            EffectiveGroup = GroupId.Root
-        };
+            return this;
+        }
+        else
+        {
+            return this with
+            {
+                SavedUser = EffectiveUser,
+                SavedGroup = EffectiveGroup,
+                EffectiveUser = UserId.Root,
+                EffectiveGroup = GroupId.Root
+            };
+        }
+    }
 
     public SecurityContext Restore()
         => this with

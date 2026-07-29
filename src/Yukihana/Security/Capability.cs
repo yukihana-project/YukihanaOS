@@ -9,7 +9,7 @@ public enum Capability : ulong
     None = 0,
     MountFilesystem = 1 << 0,
     Shutdown = 1 << 1,
-    ChangeModule = 1 << 2,
+    ChangeMode = 1 << 2,
     ChangePermissions = 1 << 3,
     All = ulong.MaxValue
 }
