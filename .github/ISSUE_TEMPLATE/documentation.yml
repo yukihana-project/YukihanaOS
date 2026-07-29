@@ -1,9 +1,7 @@
 ﻿name: Documentation
-about: Report documentation issues or suggest improvements.
+description: Report documentation issues or suggest improvements.
 title: "[Docs]: "
 labels: ["documentation"]
-assignees:
-  - zimavi
 body:
   - type: markdown
     attributes:
