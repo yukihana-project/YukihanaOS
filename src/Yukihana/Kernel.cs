@@ -230,11 +230,7 @@ public sealed class Kernel : Sys.Kernel
 
         Thread thread = SecurityManager.CreateThread(() =>
         {
-            s_kernelLogger.Info("Current context is: ");
-            s_kernelLogger.Info($" euid={SecurityManager.Current.EffectiveUser}");
-            s_kernelLogger.Info($" egid={SecurityManager.Current.EffectiveGroup}");
-            s_kernelLogger.Info($" cap={SecurityManager.Current.Capabilities}");
-            s_kernelLogger.Info($" is_kern={SecurityManager.Current.IsKernel}");
+            s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
         });
 
 
