@@ -5,9 +5,11 @@ on:
     types:
       - ready_for_review
       - converted_to_draft
+      - closed
+
   pull_request_review:
-    types: 
-     - submitted
+    types:
+      - submitted
 
 permissions:
   contents: read
@@ -17,38 +19,62 @@ permissions:
 
 jobs:
   update-status:
+    name: 📝 Update Project Status
     runs-on: ubuntu-latest
 
     steps:
-      - name: Determine desired status
-        id: status
-        run: |
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            if [[ "${{ github.event.action }}" == "ready_for_review" ]]; then
-              echo "status=${{ vars.STATUS_IN_REVIEW_ID }}" >> "$GITHUB_OUTPUT"
-            elif [[ "${{ github.event.action }}" == "converted_to_draft" ]]; then
-              echo "status=${{ vars.STATUS_IN_PROGRESS_ID }}" >> "$GITHUB_OUTPUT"
-            fi
-          elif [[ "${{ github.event_name }}" == "pull_request_review" ]]; then
-            if [[ "${{ github.event.review.state }}" == "changes_requested" ]]; then
-              echo "status=${{ vars.STATUS_IN_PROGRESS_ID }}" >> "$GITHUB_OUTPUT"
-            fi
-          fi
-
-      - name: Update linked issues in Project
+      - name: 📝 Update linked issues in Project
         uses: actions/github-script@v9
         env:
           PROJECT_ID: ${{ vars.PROJECT_ID }}
           STATUS_FIELD_ID: ${{ vars.STATUS_FIELD_ID }}
-          STATUS_OPTION_ID: ${{ steps.status.outputs.status }}
+          STATUS_IN_PROGRESS_ID: ${{ vars.STATUS_IN_PROGRESS_ID }}
+          STATUS_IN_REVIEW_ID: ${{ vars.STATUS_IN_REVIEW_ID }}
+          STATUS_READY_FOR_MERGE_ID: ${{ vars.STATUS_READY_FOR_MERGE_ID }}
+          STATUS_DONE_ID: ${{ vars.STATUS_DONE_ID }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const pr = context.payload.pull_request;
 
-             const { repository } = context.repo;
+            let status = null;
 
-            const result = await github.graphql(`
+            if (context.eventName === "pull_request") {
+              switch (context.payload.action) {
+                case "ready_for_review":
+                  status = process.env.STATUS_IN_REVIEW_ID;
+                  break;
+
+                case "converted_to_draft":
+                  status = process.env.STATUS_IN_PROGRESS_ID;
+                  break;
+
+                case "closed":
+                  if (pr.merged) {
+                    status = process.env.STATUS_DONE_ID;
+                  }
+                  break;
+              }
+            }
+
+            if (context.eventName === "pull_request_review") {
+              switch (context.payload.review.state) {
+                case "changes_requested":
+                  status = process.env.STATUS_IN_PROGRESS_ID;
+                  break;
+
+                case "approved":
+                  status = process.env.STATUS_READY_FOR_MERGE_ID;
+                  break;
+              }
+            }
+
+            if (!status) {
+              core.info("No project status update required.");
+              return;
+            }
+
+            const linkedIssues = await github.graphql(`
               query($owner:String!, $repo:String!, $number:Int!) {
                 repository(owner:$owner, name:$repo) {
                   pullRequest(number:$number) {
@@ -68,43 +94,43 @@ jobs:
             });
 
             const issues =
-              result.repository.pullRequest.closingIssuesReferences.nodes;
+              linkedIssues.repository.pullRequest.closingIssuesReferences.nodes;
 
-            if (issues.length === 0) {
+            if (!issues.length) {
               core.info("No linked issues found.");
               return;
             }
 
-            for (const issue of issues) {
-
-              const itemResult = await github.graphql(`
-                query($project:ID!, $issue:ID!) {
-                  node(id:$project) {
-                    ... on ProjectV2 {
-                      items(first:100) {
-                        nodes {
-                          id
-                          content {
-                            ... on Issue {
-                              id
-                            }
+            const project = await github.graphql(`
+              query($project:ID!) {
+                node(id:$project) {
+                  ... on ProjectV2 {
+                    items(first:100) {
+                      nodes {
+                        id
+                        content {
+                          ... on Issue {
+                            id
                           }
                         }
                       }
                     }
                   }
                 }
-              `,{
-                project: process.env.PROJECT_ID,
-                issue: issue.id
-              });
+              }
+            `, {
+              project: process.env.PROJECT_ID
+            });
 
-              const item = itemResult.node.items.nodes.find(
-                i => i.content && i.content.id === issue.id
+            const items = project.node.items.nodes;
+
+            for (const issue of issues) {
+              const item = items.find(
+                i => i.content?.id === issue.id
               );
 
               if (!item) {
-                core.info(`Issue #${issue.number} not found in project`);
+                core.info(\`Issue #\${issue.number} is not in the project.\`);
                 continue;
               }
 
@@ -130,14 +156,12 @@ jobs:
                     }
                   }
                 }
-              `,{
+              `, {
                 project: process.env.PROJECT_ID,
                 item: item.id,
                 field: process.env.STATUS_FIELD_ID,
-                option: process.env.STATUS_OPTION_ID
+                option: status
               });
 
-              core.info(`Updated issue #${issue.number}`);
+              core.info(\`Updated issue #\${issue.number}\`);
             }
-
-        
