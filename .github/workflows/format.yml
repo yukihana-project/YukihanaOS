@@ -1,39 +1,51 @@
 name: .NET Format
 
 on:
-    push:
-        branches:
-            - 'master'
-        paths-ignore:
-            - '*.md'
-    pull_request:
-        branches:
-            - 'master'
-        paths-ignore:
-            - '*.md'
+  push:
+    branches:
+      - 'master'
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - "docs/**"
+  pull_request:
+    branches:
+      - 'master'
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - "docs/**"
 
 permissions:
-    contents: read
+  contents: read
 
 jobs:
-    format:
-        name: Check Code Formatting
-        runs-on: ubuntu-latest
+  format:
+    name: Check Code Formatting
+    runs-on: ubuntu-latest
 
-        strategy:
-            matrix:
-                dotnet-version: [10.0.*]
-        steps:
-            - name: 📥 Checkout Repository
-              uses: actions/checkout@v7
+    strategy:
+      matrix:
+        dotnet-version: [10.0.*]
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v7
 
-            - name: 🧰 Setup .NET
-              uses: actions/setup-dotnet@v6
-              with:
-                dotnet-version: ${{ matrix.dotnet-version }}
+      - name: 🧰 Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            **/*.props
+            **/*.targets
+            **/NuGet.config
 
-            - name: ⚙️ Restore Dependencies
-              run: dotnet restore ./Yukihana.slnx
+      - name: ⚙️ Restore Dependencies
+        run: dotnet restore ./Yukihana.slnx
 
-            - name: 🔍 Check Formatting
-              run: dotnet format ./Yukihana.slnx --exclude dotnet --verify-no-changes --severity error || { echo "::error file=Code Formatting::Some files need formatting. Run 'dotnet format' locally."; exit 1; }
+      - name: 🔍 Check Formatting
+        run: dotnet format ./Yukihana.slnx --exclude dotnet --verify-no-changes --verbosity minimal --severity error || { echo "::error file=Code Formatting::Some files need formatting. Run 'dotnet format' locally."; exit 1; }

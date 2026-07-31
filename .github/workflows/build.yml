@@ -1,74 +1,84 @@
 name: Build kernel
 
 on:
-    push:
-        branches:
-            - 'master'
-        paths-ignore:
-            - '*.md'
-    pull_request:
-        branches:
-            - 'master'
-        paths-ignore:
-            - '*.md'
+  push:
+    branches:
+      - 'master'
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - "docs/**"
+  pull_request:
+    branches:
+      - 'master'
+    paths-ignore:
+      - "**/*.md"
+      - "LICENSE"
+      - ".gitignore"
+      - "docs/**"
 
 permissions:
-    contents: read
+  contents: read
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-    build:
-        runs-on: ubuntu-latest
+  build:
+    name: Build (${{ matrix.arch }})
+    runs-on: ubuntu-latest
 
-        strategy:
-            matrix:
-                dotnet-version: [10.0.*]
-                arch: [x64, arm64]
-        steps:
-            - name: 📥 Checkout repository
-              uses: actions/checkout@v7
+    strategy:
+      fail-fast: false
+      matrix:
+        dotnet-version: [10.0.*]
+        arch: [x64, arm64]
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v7
 
-            - name: 🧰 Setup dotnet ${{ matrix.dotnet-version }}
-              uses: actions/setup-dotnet@v6
-              with:
-                dotnet-version: ${{ matrix.dotnet-version }}
-                cache: true
-                cache-dependency-path: |
-                  **/*.csproj
-                  **/*.props
-                  **/*.targets
-                  **/NuGet.config
+      - name: 🧰 Setup dotnet ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            **/*.props
+            **/*.targets
+            **/NuGet.config
 
-            - name: 🛣️ Add .NET tools to PATH
-              run: echo "$HOME/.dotnet/tools" >> $GITHUB_PATH
+      - name: 🛣️ Add .NET tools to PATH
+        run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-            - name: 📦 Cache Cosmos tools
-              uses: actions/cache@v6
-              with:
-                path: ~/.cosmos/tools
-                key: ${{ runner.os }}-cosmos-v1
-                restore-keys: |
-                  ${{ runner.os }}-cosmos-
+      - name: 📦 Cache Cosmos tools
+        uses: actions/cache@v6
+        with:
+          path: ~/.cosmos/tools
+          key: ${{ runner.os }}-cosmos-v1
+          restore-keys: |
+            ${{ runner.os }}-cosmos-
 
-            - name: 📦 Install Cosmos.Tools
-              run: dotnet tool install -g Cosmos.Tools
+      - name: 📦 Install Cosmos.Tools
+        run: dotnet tool install -g Cosmos.Tools
 
-            - name: ⚙️ Install Cosmos packages & dependencies
-              run: cosmos install -y
+      - name: ⚙️ Install Cosmos packages & dependencies
+        run: cosmos install -y
 
-            - name: 🛠 Build YKConfig
-              working-directory: src/Yukihana.BuildConfig
-              run: |
-                  dotnet restore
-                  dotnet build -c Release
+      - name: 🛠 Build YKConfig
+        working-directory: src/Yukihana.BuildConfig
+        run: dotnet build -c Release
 
-            - name: 📂 Init build configuration
-              working-directory: src/Yukihana
-              run: ./ykconfig init
+      - name: 📂 Init build configuration
+        working-directory: src/Yukihana
+        run: ./ykconfig init
 
-            - name: ✒️ Configure build
-              working-directory: src/Yukihana
-              run: ./ykconfig configure full
+      - name: ✒️ Configure build
+        working-directory: src/Yukihana
+        run: ./ykconfig configure full
 
-            - name: 🚀 Build kernel (Release ${{ matrix.arch }})
-              working-directory: src/Yukihana
-              run: cosmos build -c Release -a ${{ matrix.arch }}
+      - name: 🚀 Build kernel (Release ${{ matrix.arch }})
+        working-directory: src/Yukihana
+        run: cosmos build -c Release -a ${{ matrix.arch }}
