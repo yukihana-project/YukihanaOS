@@ -1,6 +1,30 @@
 name: Sync Project Status with Review State
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr-number:
+        description: "Pull request number to simulate"
+        required: true
+        type: number
+
+      action:
+        description: "Status transition to simulate"
+        required: true
+        type: choice
+        options:
+          - ready_for_review
+          - converted_to_draft
+          - changes_requested
+          - approved
+          - merged
+
+      dry-run:
+        description: "Don't modify the project"
+        required: true
+        default: true
+        type: boolean
+
   pull_request:
     types:
       - ready_for_review
@@ -35,42 +59,59 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const pr = context.payload.pull_request;
+            let pr;
+            let transition;
+
+            if (context.eventName === "workflow_dispatch") {
+              const prNumber = Number(core.getInput("pr-number"));
+              transition = core.getInput("action");
+
+              const { data } = await github.rest.pulls.get({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: prNumber
+              });
+
+              pr = data;
+            } else {
+              pr = context.payload.pull_request;
+
+              if (context.eventName === "pull_request") {
+                transition = context.payload.action;
+              } else {
+                transition = context.payload.review.state;
+              }
+            }
 
             let status = null;
 
-            if (context.eventName === "pull_request") {
-              switch (context.payload.action) {
-                case "ready_for_review":
-                  status = process.env.STATUS_IN_REVIEW_ID;
-                  break;
+            switch (transition) {
+              case "ready_for_review":
+                status = process.env.STATUS_IN_REVIEW_ID;
+                break;
 
-                case "converted_to_draft":
-                  status = process.env.STATUS_IN_PROGRESS_ID;
-                  break;
+              case "converted_to_draft":
+              case "changes_requested":
+                status = process.env.STATUS_IN_PROGRESS_ID;
+                break;
 
-                case "closed":
-                  if (pr.merged) {
-                    status = process.env.STATUS_DONE_ID;
-                  }
-                  break;
-              }
-            }
+              case "approved":
+                status = process.env.STATUS_READY_FOR_MERGE_ID;
+                break;
 
-            if (context.eventName === "pull_request_review") {
-              switch (context.payload.review.state) {
-                case "changes_requested":
-                  status = process.env.STATUS_IN_PROGRESS_ID;
-                  break;
+              case "merged":
+                status = process.env.STATUS_DONE_ID;
+                break;
 
-                case "approved":
-                  status = process.env.STATUS_READY_FOR_MERGE_ID;
-                  break;
-              }
+              case "closed":
+                if (pr.merged) {
+                  status = process.env.STATUS_DONE_ID;
+                }
+                break;
             }
 
             if (!status) {
-              core.info("No project status update required.");
+              core.info("Nothing to update.");
               return;
             }
 
@@ -97,7 +138,7 @@ jobs:
               linkedIssues.repository.pullRequest.closingIssuesReferences.nodes;
 
             if (!issues.length) {
-              core.info("No linked issues found.");
+              core.info("No linked issues.");
               return;
             }
 
@@ -124,13 +165,20 @@ jobs:
 
             const items = project.node.items.nodes;
 
+            const dryRun = core.getInput("dry-run") === "true";
+
             for (const issue of issues) {
-              const item = items.find(
-                i => i.content?.id === issue.id
-              );
+              const item = items.find(i => i.content?.id === issue.id);
 
               if (!item) {
-                core.info(\`Issue #\${issue.number} is not in the project.\`);
+                core.info(`Issue #${issue.number} is not in the project.`);
+                continue;
+              }
+
+              if (dryRun) {
+                core.info(
+                  `[DRY RUN] Would update issue #${issue.number} to status ${status}`
+                );
                 continue;
               }
 
@@ -163,5 +211,5 @@ jobs:
                 option: status
               });
 
-              core.info(\`Updated issue #\${issue.number}\`);
+              core.info(`Updated issue #${issue.number}`);
             }
