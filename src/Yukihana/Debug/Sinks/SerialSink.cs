@@ -13,7 +13,7 @@ internal sealed class SerialSink : ILogSink
 
     public void Write(ReadOnlySpan<char> text)
     {
-        lock(s_sinksLock)
+        lock (s_sinksLock)
         {
             Serial.WriteString(new string(text) + '\n');
         }

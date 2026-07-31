@@ -3,6 +3,8 @@
 
 namespace Yukihana.Security;
 
+
+// salt = sha256(username + uid + creation time)
 public static class Pbkdf2Sha256
 {
     private const int HashSize = 32;

@@ -86,7 +86,7 @@ public sealed class Kernel : Sys.Kernel
         // Setup formatters and sinks
         var logger = new Logger("init");
 
-        SecurityManager.Set(Thread.CurrentThread, SecurityContextFactory.CreateKernelContext());
+        SecurityManager.Set(Thread.CurrentThread, SecurityContext.Root);
 
         logger.Trace("Parsed arguments:");
 
@@ -226,32 +226,29 @@ public sealed class Kernel : Sys.Kernel
 
         logger.Info($"Base kernel initialization finished at {DateTime.Now:dd-MM-yyyy HH:mm:ss.fff}.");
 
-        logger.Info("Testing new thread context");
+        // inherits credentials until logged in
+        Thread userThread = SecurityManager.CreateThread(ShellThread);
 
-        Thread thread = SecurityManager.CreateThread(() =>
+        userThread.Start();
+        Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+
+        while (true)
         {
-            s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
-        });
+            // idle thread
+            userThread.Join();
+        }
+    }
 
+    private static void ShellThread()
+    {
+        // TODO: Implement shell
+        //       log in
 
-        s_kernelLogger.Info("This should inherit from kernel");
-        thread.Start();
-        thread.Join();
-
-        thread = SecurityManager.CreateThread(() =>
+        while (true)
         {
-            s_kernelLogger.Info("Current context is: ");
-            s_kernelLogger.Info($" euid={SecurityManager.Current.EffectiveUser}");
-            s_kernelLogger.Info($" egid={SecurityManager.Current.EffectiveGroup}");
-            s_kernelLogger.Info($" cap={SecurityManager.Current.Capabilities}");
-            s_kernelLogger.Info($" is_kern={SecurityManager.Current.IsKernel}");
-        }, SecurityContextFactory.CreateRootContext());
-
-        s_kernelLogger.Info("This should be just root context");
-        thread.Start();
-        thread.Join();
-
-        throw new Exception("Returned from init");
+            // idle
+            Thread.Sleep(1000);
+        }
     }
 
     protected override void Run()

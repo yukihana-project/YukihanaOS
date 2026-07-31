@@ -28,6 +28,8 @@ public sealed class SecurityManager
         _contexts.TryRemove(thread.ManagedThreadId, out _);
     }
 
+    public void SetCurrent(SecurityContext context) => Set(Thread.CurrentThread, context);
+
     public SecurityContext Current
         => Get(Thread.CurrentThread)
            ?? throw new InvalidOperationException("Current thread does not have any context assigned to it");

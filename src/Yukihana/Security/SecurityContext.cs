@@ -23,7 +23,17 @@ public sealed record SecurityContext
 
     public required CapabilitySet Capabilities { get; init; }
 
-    public bool IsKernel { get; init; }
+    public static SecurityContext Root { get; } = new()
+    {
+        RealUser = UserId.Root,
+        EffectiveUser = UserId.Root,
+        SavedUser = UserId.Root,
+        RealGroup = GroupId.Root,
+        EffectiveGroup = GroupId.Root,
+        SavedGroup = GroupId.Root,
+        SupplementaryGroups = [GroupId.Root],
+        Capabilities = CapabilitySet.Root
+    };
 
     public SecurityContext WithEffectiveIdentity(
         UserId user,

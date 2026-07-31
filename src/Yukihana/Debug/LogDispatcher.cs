@@ -50,8 +50,8 @@ internal static class LogDispatcher
 
     public static void Dispatch(in LogEvent logEvent)
     {
-        lock(s_ringBufferLock)
-        { 
+        lock (s_ringBufferLock)
+        {
             if (RingBufferEnabled)
             {
                 s_ringBuffer.Add(logEvent);

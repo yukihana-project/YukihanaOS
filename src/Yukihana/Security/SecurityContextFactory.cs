@@ -5,40 +5,6 @@ namespace Yukihana.Security;
 
 public static class SecurityContextFactory
 {
-    public static SecurityContext CreateKernelContext() => new()
-    {
-        RealUser = UserId.Root,
-        EffectiveUser = UserId.Root,
-        SavedUser = UserId.Root,
-
-        RealGroup = GroupId.Root,
-        EffectiveGroup = GroupId.Root,
-        SavedGroup = GroupId.Root,
-
-        SupplementaryGroups = [],
-
-        Capabilities = CapabilitySet.Root,
-
-        IsKernel = true
-    };
-
-    public static SecurityContext CreateRootContext() => new()
-    {
-        RealUser = UserId.Root,
-        EffectiveUser = UserId.Root,
-        SavedUser = UserId.Root,
-
-        RealGroup = GroupId.Root,
-        EffectiveGroup = GroupId.Root,
-        SavedGroup = GroupId.Root,
-
-        SupplementaryGroups = [GroupId.Root],
-
-        Capabilities = CapabilitySet.Root,
-
-        IsKernel = false
-    };
-
     public static SecurityContext CreateUserContext(User user) => new()
     {
         RealUser = user.Id,
@@ -51,8 +17,6 @@ public static class SecurityContextFactory
 
         SupplementaryGroups = user.SupplementaryGroups,
 
-        Capabilities = user.DefaultCapabilities,
-
-        IsKernel = false
+        Capabilities = user.DefaultCapabilities
     };
 }
