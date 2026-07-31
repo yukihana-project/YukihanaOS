@@ -25,6 +25,7 @@ using Yukihana.Vfs;
 using Yukihana.Vfs.Config;
 using Yukihana.Vfs.Device;
 using Yukihana.Vfs.Filesystem.InitFs;
+using Yukihana.Vfs.Filesystem.TmpFs;
 using Sys = Cosmos.Kernel.System;
 
 namespace Yukihana;
@@ -222,6 +223,17 @@ public sealed class Kernel : Sys.Kernel
         */
 
         logger.Info($"Base kernel initialization finished at {DateTime.Now:dd-MM-yyyy HH:mm:ss.fff}.");
+
+        VfsManager.RegisterFilesystem("tmpfs", new TmpfsFilesystemType(128 * 1024 * 1024));
+
+        if(!VfsManager.TryMount("tmpfs", "", MountFlags.NoExec, "/tmp", out _))
+        {
+            throw new Exception("Unable to mount tmpfs");
+        }
+
+        File.WriteAllText("/tmp/test.txt", "America ya :D");
+
+        logger.Info($"tmpfs file => {File.ReadAllText("/tmp/test.txt")}");
 
         throw new Exception("Returned from init");
     }
