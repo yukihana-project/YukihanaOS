@@ -17,13 +17,15 @@ internal static class LogDispatcher
 
     public static IReadOnlyList<LogSinkRegistration> Sinks => s_sinks;
 
+    private static readonly Lock s_ringBufferLock = new();
+
     public static void RegisterSink(
         ILogSink sink,
         ILogFormatter formatter,
         LogLevel minimumLevel = LogLevel.Trace,
         bool enabled = true)
     {
-        s_sinks.Add(new()
+        s_sinks.Add(new LogSinkRegistration
         {
             Sink = sink,
             Formatter = formatter,
@@ -48,23 +50,20 @@ internal static class LogDispatcher
 
     public static void Dispatch(in LogEvent logEvent)
     {
-        if (RingBufferEnabled)
-        {
-            s_ringBuffer.Add(logEvent);
+        lock(s_ringBufferLock)
+        { 
+            if (RingBufferEnabled)
+            {
+                s_ringBuffer.Add(logEvent);
+            }
         }
 
-        foreach (LogSinkRegistration registration in s_sinks)
+        foreach (LogSinkRegistration registration in s_sinks.Where(registration => registration.Enabled))
         {
-            if (!registration.Enabled)
-            {
-                continue;
-            }
-
             if (logEvent.Level < registration.MinimumLevel)
             {
                 continue;
             }
-
             string text = registration.Formatter.Format(logEvent);
 
             registration.Sink.Write(text);

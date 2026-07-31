@@ -7,17 +7,11 @@ namespace Yukihana.Debug;
 
 public sealed class Logger(string source)
 {
-    private readonly string _source = source;
-
     public static Logger GlobalLogger
     {
         get
         {
-            if (field is null)
-            {
-                return new();
-            }
-            return field;
+            return field ?? new Logger();
         }
         set;
     } = null;
@@ -28,47 +22,29 @@ public sealed class Logger(string source)
     public void Trace(string msg,
         [CallerMemberName] string m = "",
         [CallerFilePath] string f = "",
-        [CallerLineNumber] int l = 0)
-    {
-        LogDispatcher.Dispatch(new(LogLevel.Trace, _source, msg, DateTime.Now, 0, f, m, l));
-    }
+        [CallerLineNumber] int l = 0) => LogDispatcher.Dispatch(new LogEvent(LogLevel.Trace, source, msg, DateTime.Now, 0, f, m, l));
     public void Debug(string msg,
         [CallerMemberName] string m = "",
         [CallerFilePath] string f = "",
-        [CallerLineNumber] int l = 0)
-    {
-        LogDispatcher.Dispatch(new(LogLevel.Debug, _source, msg, DateTime.Now, 0, f, m, l));
-    }
+        [CallerLineNumber] int l = 0) => LogDispatcher.Dispatch(new LogEvent(LogLevel.Debug, source, msg, DateTime.Now, 0, f, m, l));
 
     public void Info(string msg,
         [CallerMemberName] string m = "",
         [CallerFilePath] string f = "",
-        [CallerLineNumber] int l = 0)
-    {
-        LogDispatcher.Dispatch(new(LogLevel.Info, _source, msg, DateTime.Now, 0, f, m, l));
-    }
+        [CallerLineNumber] int l = 0) => LogDispatcher.Dispatch(new LogEvent(LogLevel.Info, source, msg, DateTime.Now, 0, f, m, l));
 
     public void Warn(string msg,
         [CallerMemberName] string m = "",
         [CallerFilePath] string f = "",
-        [CallerLineNumber] int l = 0)
-    {
-        LogDispatcher.Dispatch(new(LogLevel.Warn, _source, msg, DateTime.Now, 0, f, m, l));
-    }
+        [CallerLineNumber] int l = 0) => LogDispatcher.Dispatch(new LogEvent(LogLevel.Warn, source, msg, DateTime.Now, 0, f, m, l));
 
     public void Error(string msg,
         [CallerMemberName] string m = "",
         [CallerFilePath] string f = "",
-        [CallerLineNumber] int l = 0)
-    {
-        LogDispatcher.Dispatch(new(LogLevel.Error, _source, msg, DateTime.Now, 0, f, m, l));
-    }
+        [CallerLineNumber] int l = 0) => LogDispatcher.Dispatch(new LogEvent(LogLevel.Error, source, msg, DateTime.Now, 0, f, m, l));
 
     public void Critical(string msg,
         [CallerMemberName] string m = "",
         [CallerFilePath] string f = "",
-        [CallerLineNumber] int l = 0)
-    {
-        LogDispatcher.Dispatch(new(LogLevel.Crit, _source, msg, DateTime.Now, 0, f, m, l));
-    }
+        [CallerLineNumber] int l = 0) => LogDispatcher.Dispatch(new LogEvent(LogLevel.Crit, source, msg, DateTime.Now, 0, f, m, l));
 }

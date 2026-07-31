@@ -30,7 +30,7 @@ public sealed class SecurityManager
 
     public SecurityContext Current
         => Get(Thread.CurrentThread)
-           ?? throw new InvalidOperationException();
+           ?? throw new InvalidOperationException("Current thread does not have any context assigned to it");
 
     public Thread CreateThread(ThreadStart start, SecurityContext context)
     {
@@ -38,7 +38,7 @@ public sealed class SecurityManager
 
         Thread thread = new(() =>
         {
-            _contexts[Thread.CurrentThread.ManagedThreadId] = context;
+            _contexts[Environment.CurrentManagedThreadId] = context;
 
             try
             {
@@ -46,7 +46,7 @@ public sealed class SecurityManager
             }
             finally
             {
-                _contexts.TryRemove(Thread.CurrentThread.ManagedThreadId, out _);
+                _contexts.TryRemove(Environment.CurrentManagedThreadId, out _);
             }
         });
 

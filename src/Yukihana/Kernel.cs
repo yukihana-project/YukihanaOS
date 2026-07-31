@@ -1,7 +1,6 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
-using System.Collections.Immutable;
 using System.Data;
 using System.Reflection;
 using Cosmos.Kernel.HAL.Vfs;
@@ -34,10 +33,10 @@ public sealed class Kernel : Sys.Kernel
 {
     public static DateTime BootTime { get; }
 
-    private const string RAMFS_PATH = "Yukihana";
-    private const string RAMFS_FILE = "initramfs.cpio.gz";
+    private const string RamfsPath = "Yukihana";
+    private const string RamfsFile = "initramfs.cpio.gz";
 
-    private static string _ramfs_resource_key => string.Join('.', RAMFS_PATH, RAMFS_FILE);
+    private static string RamfsResourceKey => string.Join('.', RamfsPath, RamfsFile);
 
     private static readonly Logger s_kernelLogger;
     private static readonly VfsConfigManager s_vfsMan;
@@ -48,9 +47,9 @@ public sealed class Kernel : Sys.Kernel
     {
         BootTime = DateTime.Now;
 
-        s_kernelLogger = new("kern");
+        s_kernelLogger = new Logger("kern");
 
-        s_vfsMan = new();
+        s_vfsMan = new VfsConfigManager();
     }
 
     protected override void BeforeRun()
@@ -113,12 +112,12 @@ public sealed class Kernel : Sys.Kernel
 
         VfsInit.InitVfs(logger, s_vfsMan);
 
-        logger.Info($"Fetching \"{RAMFS_FILE}\".");
+        logger.Info($"Fetching \"{RamfsFile}\".");
         byte[]? ramfsBytes = null;
 
         var assembly = Assembly.GetExecutingAssembly();
 
-        using (var result = assembly.GetManifestResourceStream(_ramfs_resource_key).ToOption())
+        using (var result = assembly.GetManifestResourceStream(RamfsResourceKey).ToOption())
         using (var memStream = new MemoryStream())
         {
             if (result.IsSome)
@@ -170,7 +169,7 @@ public sealed class Kernel : Sys.Kernel
         var fontGroup = new OptionalResourceGroup<FontState>(
             name: "Fonts",
             createState: () => new FontState(),
-            commit: state => { },
+            commit: _ => { },
             provider: new VfsResourceProvider()
         );
 
@@ -227,7 +226,26 @@ public sealed class Kernel : Sys.Kernel
 
         logger.Info($"Base kernel initialization finished at {DateTime.Now:dd-MM-yyyy HH:mm:ss.fff}.");
 
-
+        //logger.Info("Testing new thread context");
+        //
+        //Thread thread = SecurityManager.CreateThread(() =>
+        //{
+        //    s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
+        //});
+        //
+        //
+        //s_kernelLogger.Info("This should inherit from kernel");
+        //thread.Start();
+        //thread.Join();
+        //
+        //thread = SecurityManager.CreateThread(() =>
+        //{
+        //    s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
+        //}, SecurityContextFactory.CreateRootContext());
+        //
+        //s_kernelLogger.Info("This should be just root context");
+        //thread.Start();
+        //thread.Join();
 
         throw new Exception("Returned from init");
     }

@@ -6,12 +6,16 @@ using Yukihana.Debug.Interfaces;
 
 namespace Yukihana.Debug.Sinks;
 
-internal sealed class SerialSink() : ILogSink
+internal sealed class SerialSink : ILogSink
 {
     public LogLevel MinimumLevel { get; set; } = LogLevel.Trace;
+    private static readonly Lock s_sinksLock = new();
 
     public void Write(ReadOnlySpan<char> text)
     {
-        Serial.WriteString(new string(text) + '\n');
+        lock(s_sinksLock)
+        {
+            Serial.WriteString(new string(text) + '\n');
+        }
     }
 }

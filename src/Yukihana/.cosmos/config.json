@@ -1,7 +1,7 @@
 {
   "targetArch": "x64",
   "qemu": {
-    "memory": "512M",
+    "memory": "1G",
     "machineType": "q35",
     "cpuModel": "host",
     "serialMode": "stdio",
