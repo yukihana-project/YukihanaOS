@@ -10,7 +10,7 @@ on:
       - master
 
   schedule:
-    - cron: '19 5 * * 3'
+    - cron: "19 5 * * 3"
 
 permissions:
   security-events: write
@@ -19,27 +19,40 @@ permissions:
   packages: read
 
 jobs:
-  analyze:
-    name: Analyze (${{ matrix.language }})
+  analyze-actions:
+    name: Analyze (Actions)
     runs-on: ubuntu-latest
-
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - language: actions
-            build-mode: none
-
-          - language: csharp
-            build-mode: manual
-            enabled: ${{ github.event_name != 'pull_request' }}
 
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: 🔍 Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: actions
+          build-mode: none
+
+      - name: 🔎 Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: "/language:actions"
+
+  analyze-csharp:
+    name: Analyze (C#)
+    runs-on: ubuntu-latest
+
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: 🧰 Setup .NET
-        if: matrix.build-mode == 'manual'
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
@@ -51,55 +64,47 @@ jobs:
             **/NuGet.config
 
       - name: 🛣️ Add .NET tools to PATH
-        if: matrix.build-mode == 'manual'
         run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
       - name: 📦 Cache Cosmos tools
-        if: matrix.build-mode == 'manual'
         uses: actions/cache@v6
         with:
           path: ~/.cosmos/tools
           key: ${{ runner.os }}-cosmos-v1
+          restore-keys: |
+            ${{ runner.os }}-cosmos-
 
       - name: 📦 Install Cosmos.Tools
-        if: matrix.build-mode == 'manual'
-        shell: bash
-        run: |
-          dotnet tool install -g Cosmos.Tools
+        run: dotnet tool install -g Cosmos.Tools
 
       - name: ⚙️ Install Cosmos packages
-        if: matrix.build-mode == 'manual'
         run: cosmos install -y
 
       - name: 🔍 Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
-          languages: ${{ matrix.language }}
-          build-mode: ${{ matrix.build-mode }}
+          languages: csharp
+          build-mode: manual
 
       - name: 🛠 Build YKConfig
-        if: matrix.build-mode == 'manual'
         working-directory: src/Yukihana.BuildConfig
         run: |
           dotnet restore
           dotnet build -c Release --no-restore
 
       - name: 📂 Initialize build configuration
-        if: matrix.build-mode == 'manual'
         working-directory: src/Yukihana
         run: ./ykconfig init
 
       - name: ✒️ Configure build
-        if: matrix.build-mode == 'manual'
         working-directory: src/Yukihana
         run: ./ykconfig configure full -v
 
       - name: 🚀 Build kernel
-        if: matrix.build-mode == 'manual'
         working-directory: src/Yukihana
         run: cosmos build -v -c Release -a x64
 
       - name: 🔎 Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v4
         with:
-          category: "/language:${{ matrix.language }}"
+          category: "/language:csharp"

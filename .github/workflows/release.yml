@@ -30,50 +30,56 @@ jobs:
           - minimal
 
     steps:
-      - name: Checkout
+      - name: 📥 Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Setup .NET
+      - name: 🧰 Setup dotnet ${{ env.DOTNET_VERSION }}
         uses: actions/setup-dotnet@v6
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: |
+            **/*.csproj
+            **/*.props
+            **/*.targets
+            **/NuGet.config
 
-      - name: Cache NuGet
-        uses: actions/cache@v6
-        with:
-          path: ~/.nuget/packages
-          key: ${{ runner.os }}-nuget-${{ hashFiles('**/packages.lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nuget-
-
-      - name: Add .NET tools
+      - name: 🛣️ Add .NET tools to PATH
         run: echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
 
-      - name: Install Cosmos.Tools
+      - name: 📦 Cache Cosmos tools
+        uses: actions/cache@v6
+        with:
+          path: ~/.cosmos/tools
+          key: ${{ runner.os }}-cosmos-v1
+          restore-keys: |
+            ${{ runner.os }}-cosmos-
+
+      - name: 📦 Install Cosmos.Tools
         run: dotnet tool install -g Cosmos.Tools
 
-      - name: Install Cosmos
+      - name: ⚙️ Install Cosmos packages & dependencies
         run: cosmos install -y
 
-      - name: Build YKConfig
-        working-directory: src/Yukihana
-        run: dotnet build ../Yukihana.BuildConfig/Yukihana.BuildConfig.csproj
+      - name: 🛠 Build YKConfig
+        working-directory: src/Yukihana.BuildConfig
+        run: dotnet build -c Release -r linux-x64
 
-      - name: Initialize configuration
+      - name: 📂 Initialize configuration
         working-directory: src/Yukihana
         run: ./ykconfig init
 
-      - name: Configure preset
+      - name: ✒️ Configure preset
         working-directory: src/Yukihana
-        run: ./ykconfig configure ${{ matrix.preset }} -v
+        run: ./ykconfig configure ${{ matrix.preset }}
 
-      - name: Build kernel
+      - name: 🚀 Build kernel
         working-directory: src/Yukihana
-        run: cosmos build -v -c Release -a ${{ matrix.arch }}
+        run: cosmos build -c Release -a ${{ matrix.arch }}
 
-      - name: Rename ISO
+      - name: 🏷️ Rename ISO
         run: |
           mkdir release
 
@@ -81,7 +87,7 @@ jobs:
             src/Yukihana/output-${{ matrix.arch }}/Yukihana.iso \
             release/YukihanaOS-v${{ github.event.inputs.version }}-${{ matrix.preset }}-${{ matrix.arch }}.iso
 
-      - name: Upload ISO artifact
+      - name: 📦 Upload ISO artifact
         uses: actions/upload-artifact@v7
         with:
           name: iso-${{ matrix.arch }}-${{ matrix.preset }}
@@ -96,44 +102,49 @@ jobs:
       contents: write
 
     steps:
-      - name: Checkout
+      - name: 📥 Checkout repository
         uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - name: Create release branch
+      - name: 🌿 Create release branch
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
+          git switch --detach "${{ github.sha }}"
           git checkout -b release/v${{ github.event.inputs.version }}
           git push origin release/v${{ github.event.inputs.version }}
 
-      - name: Create tag
+      - name: 🔖 Create tag
         run: |
-          git tag v${{ github.event.inputs.version }}
-          git push origin v${{ github.event.inputs.version }}
+          git switch release/v${{ github.event.inputs.version }}
+          git tag -a v${{ github.event.inputs.version }} \
+            -m "Yukihana release v${{ github.event.inputs.version }}"
+          git push --set-upstream origin v${{ github.event.inputs.version }}
 
-      - name: Download build artifacts
+      - name: 📥 Download build artifacts
         uses: actions/download-artifact@v8
         with:
           path: release-assets
 
-      - name: Flatten artifacts
+      - name: 🗂️ Flatten artifacts
         run: |
           mkdir assets
-          find release-assets -name "*.iso" -exec cp {} assets/ \;
+          find release-assets -name "*.iso" -exec cp "{}" assets/ \;
 
-      - name: Generate SHA256SUMS
+      - name: 🔐 Generate SHA256SUMS
         working-directory: assets
         run: sha256sum *.iso > SHA256SUMS
 
-      - name: Publish GitHub Release
+      - name: 🚀 Publish GitHub Release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ github.event.inputs.version }}
           target_commitish: release/v${{ github.event.inputs.version }}
           generate_release_notes: true
+          draft: false
+          prerelease: false
           files: |
             assets/*.iso
             assets/SHA256SUMS
