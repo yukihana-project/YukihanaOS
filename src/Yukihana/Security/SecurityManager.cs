@@ -38,15 +38,19 @@ public sealed class SecurityManager
 
         Thread thread = new(() =>
         {
-            _contexts[Environment.CurrentManagedThreadId] = context;
+            _contexts[Thread.CurrentThread.ManagedThreadId] = context;
 
             try
             {
                 start();
             }
+            catch (Exception ex)
+            {
+                Logger.GlobalLogger.Error(ex.StackTrace ?? "<stacktrace null>");
+            }
             finally
             {
-                _contexts.TryRemove(Environment.CurrentManagedThreadId, out _);
+                _contexts.TryRemove(Thread.CurrentThread.ManagedThreadId, out _);
             }
         });
 
