@@ -1,5 +1,6 @@
 description = "Minimal runnable configuration"
 
 enabled = [
-    "init_ram_fs"
+    "init_ram_fs",
+    "tmp_fs"
 ]

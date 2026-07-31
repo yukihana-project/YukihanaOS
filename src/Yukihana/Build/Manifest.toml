@@ -9,6 +9,15 @@ id = "kernel"
 name = "Kernel"
 
 [[group]]
+id = "drivers"
+name = "Drivers"
+
+[[group]]
+id = "drivers.filesystems"
+name = "Filesystems"
+parent = "drivers"
+
+[[group]]
 id = "debug"
 name = "Debug"
 
@@ -43,3 +52,14 @@ define = "FEATURE_SERIAL_SINK"
 exclude = [
     "Debug/Sinks/SerialSink.cs"
 ]
+
+[[feature]]
+id = "tmp_fs"
+name = "Tmpfs"
+group = "drivers.filesystems"
+
+description = "Enables RAM-backed filesystem"
+
+define = "FEATURE_TMPFS"
+
+# TODO: Exclude sources
