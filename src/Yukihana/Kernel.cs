@@ -226,26 +226,26 @@ public sealed class Kernel : Sys.Kernel
 
         logger.Info($"Base kernel initialization finished at {DateTime.Now:dd-MM-yyyy HH:mm:ss.fff}.");
 
-        //logger.Info("Testing new thread context");
-        //
-        //Thread thread = SecurityManager.CreateThread(() =>
-        //{
-        //    s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
-        //});
-        //
-        //
-        //s_kernelLogger.Info("This should inherit from kernel");
-        //thread.Start();
-        //thread.Join();
-        //
-        //thread = SecurityManager.CreateThread(() =>
-        //{
-        //    s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
-        //}, SecurityContextFactory.CreateRootContext());
-        //
-        //s_kernelLogger.Info("This should be just root context");
-        //thread.Start();
-        //thread.Join();
+        logger.Info("Testing new thread context");
+
+        Thread thread = SecurityManager.CreateThread(() =>
+        {
+            s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
+        });
+
+
+        s_kernelLogger.Info("This should inherit from kernel");
+        thread.Start();
+        thread.Join();
+
+        thread = SecurityManager.CreateThread(() =>
+        {
+            s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
+        }, SecurityContextFactory.CreateRootContext());
+
+        s_kernelLogger.Info("This should be just root context");
+        thread.Start();
+        thread.Join();
 
         throw new Exception("Returned from init");
     }
