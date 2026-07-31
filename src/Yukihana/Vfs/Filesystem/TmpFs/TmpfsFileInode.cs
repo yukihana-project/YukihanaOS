@@ -12,12 +12,11 @@ public sealed class TmpfsFileInode : TmpfsInode
         Mode = ModeEnum.RegularFile | (ModeEnum)0x1b4; // rw-rw-r--
     }
     public List<byte[]?> Pages = [];
-    
+
     public long AllocatedSize =>
         Pages.Count(p => p != null) * 4096L;
-    
+
     public long Capacity =>
         Pages.Count * 4096L;
 
-    public override IFileOperations? FileOperations { get; }
 }

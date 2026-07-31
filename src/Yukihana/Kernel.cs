@@ -167,7 +167,7 @@ public sealed class Kernel : Sys.Kernel
         var fontGroup = new OptionalResourceGroup<FontState>(
             name: "Fonts",
             createState: () => new FontState(),
-            commit: state => { },
+            commit: _ => { },
             provider: new VfsResourceProvider()
         );
 
@@ -226,7 +226,7 @@ public sealed class Kernel : Sys.Kernel
 
         VfsManager.RegisterFilesystem("tmpfs", new TmpfsFilesystemType(128 * 1024 * 1024));
 
-        if(!VfsManager.TryMount("tmpfs", "", MountFlags.NoExec, "/tmp", out _))
+        if (!VfsManager.TryMount("tmpfs", "", MountFlags.NoExec, "/tmp", out _))
         {
             throw new Exception("Unable to mount tmpfs");
         }

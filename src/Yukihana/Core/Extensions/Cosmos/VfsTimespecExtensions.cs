@@ -7,7 +7,7 @@ namespace Yukihana.Core.Extensions.Cosmos;
 
 public static class VfsTimespecExtensions
 {
-    extension (VfsTimespec)
+    extension(VfsTimespec)
     {
         public static VfsTimespec Now()
         {

@@ -8,7 +8,7 @@ namespace Yukihana.Vfs.Filesystem.TmpFs;
 public sealed class TmpfsFileOperations : IFileOperations
 {
     public bool Fsync(IVfsOpenFile openFile) => true;
-    public void Release(IVfsOpenFile openFile) {}
+    public void Release(IVfsOpenFile openFile) { }
     public long Read(IVfsOpenFile openFile, Span<byte> buffer)
     {
         var file = new TmpfsOpenFile(openFile);
@@ -18,7 +18,7 @@ public sealed class TmpfsFileOperations : IFileOperations
     public bool Seek(IVfsOpenFile openFile, long offset, SeekWhence whence, out long newPosition)
     {
         newPosition = openFile.Position;
-        
+
         switch (whence)
         {
             case SeekWhence.Set:

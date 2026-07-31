@@ -21,7 +21,7 @@ public sealed class TmpfsInodeOperations : IInodeOperations
         string strName = new(name);
 
         TmpfsInode child;
-        
+
         if ((mode & ModeEnum.Directory) != 0)
         {
             child = new TmpfsDirectoryInode()
@@ -80,7 +80,7 @@ public sealed class TmpfsInodeOperations : IInodeOperations
         {
             stat.Size += (ulong)dir.Children.Select(c => c.Value).Sum(i => i.Size);
         }
-        
+
         return true;
     }
 
@@ -93,6 +93,16 @@ public sealed class TmpfsInodeOperations : IInodeOperations
         }
 
         string strName = new(name);
+
+        switch (strName)
+        {
+            case ".":
+                child = dir;
+                return true;
+            case "..":
+                child = dirInode.Parent ?? dirInode;
+                return true;
+        }
 
         if (!dirInode.Children.TryGetValue(strName, out TmpfsInode? childInode))
         {

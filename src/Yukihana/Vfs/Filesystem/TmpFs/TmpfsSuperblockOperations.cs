@@ -7,7 +7,7 @@ namespace Yukihana.Vfs.Filesystem.TmpFs;
 
 public sealed class TmpfsSuperblockOperations : ISuperblockOperations
 {
-    public void Drop(IVfsSuperblock superblock) {}
+    public void Drop(IVfsSuperblock superblock) { }
     public bool StatFs(IVfsSuperblock superblock, out VfsStatFs statFs)
     {
         if (superblock is not TmpfsSuperblock tmpfsSuper)

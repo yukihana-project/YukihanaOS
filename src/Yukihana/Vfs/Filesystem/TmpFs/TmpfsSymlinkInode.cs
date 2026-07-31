@@ -12,6 +12,4 @@ public sealed class TmpfsSymlinkInode : TmpfsInode
         Mode = ModeEnum.SymbolicLink | (ModeEnum)0x1ff; // rwxrwxrwx
     }
     public required string Target;
-
-    public override IFileOperations? FileOperations { get; }
 }

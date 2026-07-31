@@ -24,7 +24,7 @@ public abstract class TmpfsInode : IVfsInode
 
     public uint LinkCount = 1;
 
-    public abstract IFileOperations? FileOperations { get; }
+    public IFileOperations? FileOperations => new TmpfsFileOperations();
 
     public IInodeOperations InodeOperations => new TmpfsInodeOperations();
 

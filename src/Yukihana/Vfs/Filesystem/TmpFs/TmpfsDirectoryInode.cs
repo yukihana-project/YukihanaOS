@@ -13,5 +13,4 @@ public sealed class TmpfsDirectoryInode : TmpfsInode
     }
     public readonly Dictionary<string, TmpfsInode> Children = new(StringComparer.Ordinal);
 
-    public override IFileOperations FileOperations => throw new NotImplementedException();
 }
