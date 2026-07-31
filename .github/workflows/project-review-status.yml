@@ -56,6 +56,10 @@ jobs:
           STATUS_IN_REVIEW_ID: ${{ vars.STATUS_IN_REVIEW_ID }}
           STATUS_READY_FOR_MERGE_ID: ${{ vars.STATUS_READY_FOR_MERGE_ID }}
           STATUS_DONE_ID: ${{ vars.STATUS_DONE_ID }}
+
+          TEST_PR_NUMBER: ${{ inputs.pr-number }}
+          TEST_ACTION: ${{ inputs.action }}
+          DRY_RUN: ${{ inputs.dry-run }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -63,8 +67,10 @@ jobs:
             let transition;
 
             if (context.eventName === "workflow_dispatch") {
-              const prNumber = Number(core.getInput("pr-number"));
-              transition = core.getInput("action");
+              const prNumber = Number(process.env.TEST_PR_NUMBER);
+              transition = process.env.TEST_ACTION;
+
+              core.info(`Testing PR #${prNumber} (${transition})`);
 
               const { data } = await github.rest.pulls.get({
                 owner: context.repo.owner,
@@ -137,7 +143,7 @@ jobs:
             const issues =
               linkedIssues.repository.pullRequest.closingIssuesReferences.nodes;
 
-            if (!issues.length) {
+            if (issues.length === 0) {
               core.info("No linked issues.");
               return;
             }
@@ -165,7 +171,7 @@ jobs:
 
             const items = project.node.items.nodes;
 
-            const dryRun = core.getInput("dry-run") === "true";
+            const dryRun = process.env.DRY_RUN === "true";
 
             for (const issue of issues) {
               const item = items.find(i => i.content?.id === issue.id);
