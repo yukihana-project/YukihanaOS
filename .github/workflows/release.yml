@@ -191,19 +191,16 @@ jobs:
 
       - name: 📥 Download build artifacts
         uses: actions/download-artifact@v8
-        if: ${{ !inputs.dry_run }}
         with:
           path: release-assets
 
       - name: 🗂️ Flatten artifacts
-        if: ${{ !inputs.dry_run }}
         run: |
           mkdir assets
           find release-assets -name "*.iso" -exec cp "{}" assets/ \;
 
       - name: 🔐 Generate SHA256SUMS
         working-directory: assets
-        if: ${{ !inputs.dry_run }}
         run: sha256sum *.iso > SHA256SUMS
 
       - name: 🚀 Publish GitHub Release
