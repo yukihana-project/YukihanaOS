@@ -159,7 +159,6 @@ jobs:
     needs: 
       - version
       - build
-    if: ${{ !inputs.dry_run }}
     runs-on: ubuntu-latest
 
     permissions:
