@@ -1,3 +1,4 @@
 <Project>
-  <Import Project="./Build/Generated/Features.g.targets" />
+  <Import Project="./Build/Generated/Features.g.targets"
+          Condition="Exists('./Build/Generated/Features.g.targets')" />
 </Project>

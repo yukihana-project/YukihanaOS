@@ -1,0 +1,58 @@
+# fstab - Static filesystem mount configuration
+#
+# Format:
+# <device>  <mountpoint>  <fstype>  <options>  <dump>  <pass>
+#
+# Fields:
+#   <device>
+#     Partition to mount. Supported formats:
+#       /path/to/partition     - Device path
+#       <number>               - Partition index (not recommended; depends on detection order)
+#       UUID=<uuid>            - Partition UUID (recommended)
+#       LABEL=<id>             - Partition device ID (currently matches partition device name,
+#                                e.g. sata0, nvme0n1; NOT the filesystem label)
+#
+#     Note: Only partitions can be mounted.
+#
+#   <mountpoint>
+#     Directory where the partition will be mounted.
+#
+#   <fstype>
+#     Filesystem type.
+#     Currently supported:
+#       fat  - FAT12/FAT16/FAT32 (detected automatically by the driver)
+#       ext4
+#
+#   <options>
+#     Comma-separated mount options:
+#       defaults             - Default options (read-write)
+#       rw, readwrite        - Mount read-write (default)
+#       ro, readonly         - Mount read-only
+#       nosuid               - Ignore SUID/SGID bits
+#       nodev                - Do not allow device files
+#       noexec               - Do not allow executing binaries
+#
+#   <dump>
+#     Reserved. Currently ignored.
+#
+#   <pass>
+#     Reserved. Currently ignored.
+#
+# Examples:
+#
+# Mount root by UUID (recommended)
+# UUID=f88c74ef-cc73-a343-b30c-988ef6855139  /      fat  defaults          0 0
+#
+# Mount a partition by device path as read-only
+# /dev/sata0p1                                 /boot  fat  ro,noexec        0 0
+#
+# Mount using a partition index (not recommended)
+# 1                                            /data  fat  rw,nodev         0 0
+#
+# Mount using a partition device ID
+# LABEL=nvme0n1                                /efi   fat  ro               0 0
+#
+# <device>                                 <mountpoint>  <fstype>  <options>  <dump>  <pass>
+
+#UUID=f88c74ef-cc73-a343-b30c-988ef6855139  /mnt/fat      fat       defaults   2       3
+#UUID=17ca0049-4112-40fc-8aaa-4a3ffe28ae2c  /             ext4      defaults   2       3

@@ -1,0 +1,24 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended"],
+
+  "automerge": true,
+  "automergeType": "pr",
+  "platformAutomerge": true,
+
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": [
+        "/\\.csproj$/"
+      ],
+      "matchStrings": [
+        "<CosmosVersion>(?<currentValue>[^<]+)</CosmosVersion>"
+      ],
+      "depNameTemplate": "Cosmos.Kernel",
+      "datasourceTemplate": "nuget",
+      "versioningTemplate": "nuget",
+      "autoReplaceStringTemplate": "<CosmosVersion>{{{newValue}}}</CosmosVersion>"
+    }
+  ]
+}
