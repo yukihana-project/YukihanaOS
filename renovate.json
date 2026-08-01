@@ -9,8 +9,8 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": [
-        "\\.csproj$"
+      "managerFilePatterns": [
+        "/\\.csproj$/"
       ],
       "matchStrings": [
         "<CosmosVersion>(?<currentValue>[^<]+)</CosmosVersion>"
