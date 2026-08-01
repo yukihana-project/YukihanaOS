@@ -125,14 +125,14 @@ public static class AccountManager
         }
 
         Logger.GlobalLogger.Trace("Account is not locked");
-        
+
         PasswordHashAlgorithm algorithm = account.Password.UsedAlgorithm;
 
         bool Pbkdf2Sha256Equal = account.Password.Hash.SequenceEqual(Pbkdf2Sha256.DeriveKey(
             Encoding.UTF8.GetBytes(password), account.Password.Salt));
 
         Logger.GlobalLogger.Trace($"Hashes eauql? {Pbkdf2Sha256Equal}");
-        
+
         return algorithm switch
         {
             PasswordHashAlgorithm.Pbkdf2Sha256 => Pbkdf2Sha256Equal,

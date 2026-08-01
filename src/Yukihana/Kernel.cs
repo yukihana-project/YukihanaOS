@@ -271,13 +271,13 @@ public sealed class Kernel : Sys.Kernel
 
         Console.Write("Enter password (will not be displayed): ");
 
-        while(true)
+        while (true)
         {
             string? pass = Console.ReadLineHidden();
 
             s_kernelLogger.Debug("Got password!");
 
-            if(AccountManager.Authenticate(user.Id, pass ?? ""))
+            if (AccountManager.Authenticate(user.Id, pass ?? ""))
             {
                 s_kernelLogger.Debug("Passwords match");
                 break;

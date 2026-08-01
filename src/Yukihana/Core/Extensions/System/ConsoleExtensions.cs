@@ -14,7 +14,7 @@ public static class ConsoleExtensions
         {
             StringBuilder sb = new();
 
-            while(true)
+            while (true)
             {
                 ConsoleKeyInfo keyInfo = Console.ReadKey(intercept: true);
 
