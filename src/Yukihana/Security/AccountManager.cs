@@ -17,8 +17,7 @@ public static class AccountManager
         string saltStr = $"0|root|{DateTime.Now.ToBinary()}";
         SHA256 sha = new();
         byte[] salt = sha.ComputeHash(Encoding.UTF8.GetBytes(saltStr));
-        byte[] hash = Pbkdf2Sha256.DeriveKey([.. "root"u8], salt, Pbkdf2Sha256.Interations,
-            Pbkdf2Sha256.KeyLength);
+        byte[] hash = Pbkdf2Sha256.DeriveKey([.. "root"u8], salt);
 
         s_accounts.TryAdd(UserId.Root,
             new UserAccount
@@ -61,9 +60,7 @@ public static class AccountManager
                         salt,
                         Pbkdf2Sha256.DeriveKey(
                             Encoding.UTF8.GetBytes(password),
-                            salt,
-                            Pbkdf2Sha256.Interations,
-                            Pbkdf2Sha256.KeyLength),
+                            salt),
                         algorithm),
                     Locked = doLock,
                     PasswordExpires = passwordExpires
@@ -132,8 +129,7 @@ public static class AccountManager
         PasswordHashAlgorithm algorithm = account.Password.UsedAlgorithm;
 
         bool Pbkdf2Sha256Equal = account.Password.Hash.SequenceEqual(Pbkdf2Sha256.DeriveKey(
-            Encoding.UTF8.GetBytes(password), account.Password.Salt, Pbkdf2Sha256.Interations,
-            Pbkdf2Sha256.KeyLength));
+            Encoding.UTF8.GetBytes(password), account.Password.Salt));
 
         Logger.GlobalLogger.Trace($"Hashes eauql? {Pbkdf2Sha256Equal}");
         

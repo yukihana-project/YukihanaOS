@@ -82,7 +82,6 @@ public sealed class Kernel : Sys.Kernel
 #endif
 
         Logger.GlobalLogger = s_kernelLogger;
-        Pbkdf2Sha256.DoLog = true;
 
         // Setup formatters and sinks
         var logger = new Logger("init");
@@ -227,34 +226,23 @@ public sealed class Kernel : Sys.Kernel
 
         logger.Info($"Base kernel initialization finished at {DateTime.Now:dd-MM-yyyy HH:mm:ss.fff}.");
 
-        // inherits credentials until logged in
-        Thread userThread = SecurityManager.CreateThread(ShellThread);
+        LogDispatcher.Sinks.First(r => r.Sink is ConsoleSink).Enabled = false;
 
-        s_kernelLogger.Debug("Setting kernel thread to Lowest");
+        Thread user = SecurityManager.CreateThread(UserThread);
         Thread.CurrentThread.Priority = ThreadPriority.Lowest;
 
-        s_kernelLogger.Debug("Starting idling");
+        user.Start();
+        user.Join();
 
-        LogDispatcher.Sinks.First(s => s.Sink is ConsoleSink).Enabled = false;
-
-        userThread.Start();
-
-        while (userThread.IsAlive)
+        while (true)
         {
-            // idle thread
-            userThread.Join();
+            // idle
+            Thread.Sleep(1000);
         }
     }
 
-    private static void ShellThread()
+    private static void UserThread()
     {
-        // TODO: Implement shell
-        //       log in
-
-        Logger logger = new("user");
-
-        logger.Info("Reached user thread");
-
         Console.WriteLine("\n\nLogging in");
 
         User? user;
@@ -305,8 +293,7 @@ public sealed class Kernel : Sys.Kernel
 
         while (true)
         {
-            // idle
-            //Thread.Sleep(1000);
+            Thread.Sleep(10000);
         }
     }
 

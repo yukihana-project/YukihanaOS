@@ -3,47 +3,64 @@
 
 using acryptohashnet;
 
-namespace Yukihana.Security;
-
-public static class HmacSha256
+public sealed class HmacSha256
 {
     private const int BlockSize = 64;
-    private const int HashSize = 32;
+    public const int HashSize = 32;
 
-    public static byte[] Compute(byte[] key, byte[] message)
+    private readonly byte[] _ipad = new byte[BlockSize];
+    private readonly byte[] _opad = new byte[BlockSize];
+    private readonly SHA256 _sha = new();
+
+    public HmacSha256(ReadOnlySpan<byte> key)
     {
-        ArgumentNullException.ThrowIfNull(key);
-        ArgumentNullException.ThrowIfNull(message);
-
-        SHA256 sha = new();
+        Span<byte> keyBlock = stackalloc byte[BlockSize];
 
         if (key.Length > BlockSize)
         {
-            key = sha.ComputeHash(key);
+            byte[] hashed = _sha.ComputeHash([.. key]);
+            hashed.CopyTo(keyBlock);
         }
-
-        byte[] keyBlock = new byte[BlockSize];
-        Buffer.BlockCopy(key, 0, keyBlock, 0, key.Length);
-
-        byte[] ipad = new byte[BlockSize];
-        byte[] opad = new byte[BlockSize];
+        else
+        {
+            key.CopyTo(keyBlock);
+        }
 
         for (int i = 0; i < BlockSize; i++)
         {
-            ipad[i] = (byte)(keyBlock[i] ^ 0x36);
-            opad[i] = (byte)(keyBlock[i] ^ 0x5c);
+            _ipad[i] = (byte)(keyBlock[i] ^ 0x36);
+            _opad[i] = (byte)(keyBlock[i] ^ 0x5C);
+        }
+    }
+
+    public byte[] Compute(ReadOnlySpan<byte> message)
+    {
+        byte[] result = new byte[HashSize];
+        Compute(message, result);
+        return result;
+    }
+
+    public void Compute(ReadOnlySpan<byte> message, Span<byte> destination)
+    {
+        if (destination.Length < HashSize)
+        {
+            throw new ArgumentException(null, nameof(destination));
         }
 
         byte[] inner = new byte[BlockSize + message.Length];
-        Buffer.BlockCopy(ipad, 0, inner, 0, BlockSize);
-        Buffer.BlockCopy(message, 0, inner, BlockSize, message.Length);
 
-        byte[] innerHash = sha.ComputeHash(inner);
+        Buffer.BlockCopy(_ipad, 0, inner, 0, BlockSize);
+        message.CopyTo(inner.AsSpan(BlockSize));
+
+        byte[] innerHash = _sha.ComputeHash(inner);
 
         byte[] outer = new byte[BlockSize + HashSize];
-        Buffer.BlockCopy(opad, 0, outer, 0, BlockSize);
-        Buffer.BlockCopy(innerHash, 0, outer, BlockSize, HashSize);
 
-        return sha.ComputeHash(outer);
+        Buffer.BlockCopy(_opad, 0, outer, 0, BlockSize);
+        innerHash.CopyTo(outer.AsSpan(BlockSize));
+
+        byte[] hash = _sha.ComputeHash(outer);
+
+        hash.CopyTo(destination);
     }
 }
