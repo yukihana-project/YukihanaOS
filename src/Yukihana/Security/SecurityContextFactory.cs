@@ -17,6 +17,7 @@ public static class SecurityContextFactory
 
         SupplementaryGroups = user.SupplementaryGroups,
 
-        Capabilities = user.DefaultCapabilities
+        Capabilities = user.DefaultCapabilities,
+        SavedCapabilities = user.DefaultCapabilities
     };
 }

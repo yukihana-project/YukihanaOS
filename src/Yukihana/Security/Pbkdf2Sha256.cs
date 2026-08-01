@@ -9,6 +9,9 @@ public static class Pbkdf2Sha256
 {
     private const int HashSize = 32;
 
+    public const int Interations = 100_000;
+    public const int KeyLength = 32;
+
     public static byte[] DeriveKey(
         byte[] password,
         byte[] salt,

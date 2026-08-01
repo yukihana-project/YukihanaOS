@@ -6,7 +6,7 @@ namespace Yukihana.Security;
 public sealed class UserAccount
 {
     public required User User { get; init; }
-    // TODO: passwords
-    public bool Locked { get; set; }
-    public DateTimeOffset? PasswordExpires { get; set; }
+    public required PasswordHash Password { get; set; }
+    public bool Locked { get; set; } = false;
+    public DateTimeOffset? PasswordExpires { get; set; } = DateTimeOffset.MaxValue;
 }

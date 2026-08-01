@@ -22,6 +22,7 @@ public sealed record SecurityContext
     public required ImmutableHashSet<GroupId> SupplementaryGroups { get; init; }
 
     public required CapabilitySet Capabilities { get; init; }
+    public required CapabilitySet SavedCapabilities { get; init; }
 
     public static SecurityContext Root { get; } = new()
     {
@@ -32,7 +33,8 @@ public sealed record SecurityContext
         EffectiveGroup = GroupId.Root,
         SavedGroup = GroupId.Root,
         SupplementaryGroups = [GroupId.Root],
-        Capabilities = CapabilitySet.Root
+        Capabilities = CapabilitySet.Root,
+        SavedCapabilities = CapabilitySet.Root
     };
 
     public SecurityContext WithEffectiveIdentity(
@@ -41,7 +43,8 @@ public sealed record SecurityContext
         => this with
         {
             EffectiveUser = user,
-            EffectiveGroup = group
+            EffectiveGroup = group,
+            // TODO: Update capabilities
         };
 
     public SecurityContext Elevate()
@@ -57,7 +60,8 @@ public sealed record SecurityContext
                 SavedUser = EffectiveUser,
                 SavedGroup = EffectiveGroup,
                 EffectiveUser = UserId.Root,
-                EffectiveGroup = GroupId.Root
+                EffectiveGroup = GroupId.Root,
+                Capabilities = CapabilitySet.Root
             };
         }
     }
@@ -66,7 +70,8 @@ public sealed record SecurityContext
         => this with
         {
             EffectiveUser = SavedUser,
-            EffectiveGroup = SavedGroup
+            EffectiveGroup = SavedGroup,
+            Capabilities = SavedCapabilities
         };
 
     public bool IsRoot

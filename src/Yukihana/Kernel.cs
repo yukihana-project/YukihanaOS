@@ -230,9 +230,12 @@ public sealed class Kernel : Sys.Kernel
         Thread userThread = SecurityManager.CreateThread(ShellThread);
 
         userThread.Start();
+
+        s_kernelLogger.Debug("Setting kernel thread to Lowest");
         Thread.CurrentThread.Priority = ThreadPriority.Lowest;
 
-        while (true)
+        s_kernelLogger.Debug("Starting idling");
+        while (userThread.IsAlive)
         {
             // idle thread
             userThread.Join();
@@ -243,6 +246,11 @@ public sealed class Kernel : Sys.Kernel
     {
         // TODO: Implement shell
         //       log in
+
+        Logger logger = new("user");
+
+        logger.Info("Reached user thread");
+
 
         while (true)
         {

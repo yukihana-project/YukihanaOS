@@ -18,4 +18,14 @@ public sealed class User
     public required CapabilitySet DefaultCapabilities { get; init; }
 
     public bool Enabled { get; init; } = true;
+
+    public static readonly User Root = new()
+    {
+        DefaultCapabilities = CapabilitySet.Root,
+        Enabled = true,
+        Id = UserId.Root,
+        Name = "root",
+        PrimaryGroup = GroupId.Root,
+        SupplementaryGroups = []
+    };
 }
