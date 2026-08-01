@@ -5,8 +5,13 @@ on:
     inputs:
       version:
         description: "Release version (e.g. 0.3.0)"
-        required: true
         type: string
+        required: false
+      dry_run:
+        description: "Build only (don't create branch, tag or GitHub Release)"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
@@ -15,9 +20,39 @@ env:
   DOTNET_VERSION: "10.0.*"
 
 jobs:
+  version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v7
+
+      - name: 📖 Determine release version
+        id: version
+        shell: bash
+        run: |
+          PROJECT_VERSION=$(grep -oPm1 '(?<=<YukihanaVersion>)[^<]+' src/Yukihana/Yukihana.csproj)
+
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
+            echo "Using workflow input version: $VERSION"
+          else
+            VERSION="$PROJECT_VERSION"
+            echo "Using project version: $VERSION"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build (${{ matrix.arch }} / ${{ matrix.preset }})
     runs-on: ubuntu-latest
+    needs: version
 
     strategy:
       fail-fast: false
@@ -77,15 +112,41 @@ jobs:
 
       - name: 🚀 Build kernel
         working-directory: src/Yukihana
-        run: cosmos build -c Release -a ${{ matrix.arch }}
+        shell: bash
+        run: |
+          case "${{ matrix.arch }}" in
+            x64)
+              DEFINE="ARCH_X64"
+              COSMOS_ARCH="x64"
+              RUNTIME="linux-x64"
+              OUTPUT="./output-x64"
+              ;;
+            arm64)
+              DEFINE="ARCH_ARM64"
+              COSMOS_ARCH="arm64"
+              RUNTIME="linux-arm64"
+              OUTPUT="./output-arm64"
+              ;;
+            *)
+              echo "Unknown architecture: ${{ matrix.arch }}"
+              exit 1
+              ;;
+          esac
+          
+          dotnet publish \
+            -c Release \
+            -r "$RUNTIME" \
+            -p:DefineConstants="$DEFINE" \
+            -p:CosmosArch="$COSMOS_ARCH" \
+            -p:YukihanaVersion="${{ needs.version.outputs.version }}"
 
       - name: 🏷️ Rename ISO
         run: |
           mkdir release
 
           cp \
-            src/Yukihana/output-${{ matrix.arch }}/Yukihana.iso \
-            release/YukihanaOS-v${{ github.event.inputs.version }}-${{ matrix.preset }}-${{ matrix.arch }}.iso
+            src/Yukihana/bin/Release/net10.0/linux-${{ matrix.arch }}/cosmos/Yukihana.iso \
+            release/YukihanaOS-v${{ needs.version.outputs.version }}-${{ matrix.preset }}-${{ matrix.arch }}.iso
 
       - name: 📦 Upload ISO artifact
         uses: actions/upload-artifact@v7
@@ -95,7 +156,9 @@ jobs:
 
   release:
     name: Publish Release
-    needs: build
+    needs: 
+      - version
+      - build
     runs-on: ubuntu-latest
 
     permissions:
@@ -104,24 +167,27 @@ jobs:
     steps:
       - name: 📥 Checkout repository
         uses: actions/checkout@v7
+        if: ${{ !inputs.dry_run }}
         with:
           fetch-depth: 0
 
       - name: 🌿 Create release branch
+        if: ${{ !inputs.dry_run }}
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
 
           git switch --detach "${{ github.sha }}"
-          git checkout -b release/v${{ github.event.inputs.version }}
-          git push origin release/v${{ github.event.inputs.version }}
+          git checkout -b release/v${{ needs.version.outputs.version }}
+          git push origin release/v${{ needs.version.outputs.version }}
 
       - name: 🔖 Create tag
+        if: ${{ !inputs.dry_run }}
         run: |
-          git switch release/v${{ github.event.inputs.version }}
-          git tag -a v${{ github.event.inputs.version }} \
-            -m "Yukihana release v${{ github.event.inputs.version }}"
-          git push --set-upstream origin v${{ github.event.inputs.version }}
+          git switch release/v${{ needs.version.outputs.version }}
+          git tag -a v${{ needs.version.outputs.version }} \
+            -m "Yukihana release v${{ needs.version.outputs.version }}"
+          git push --set-upstream origin v${{ needs.version.outputs.version }}
 
       - name: 📥 Download build artifacts
         uses: actions/download-artifact@v8
@@ -139,12 +205,42 @@ jobs:
 
       - name: 🚀 Publish GitHub Release
         uses: softprops/action-gh-release@v3
+        if: ${{ !inputs.dry_run }}
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          target_commitish: release/v${{ github.event.inputs.version }}
+          tag_name: v${{ needs.version.outputs.version }}
+          target_commitish: release/v${{ needs.version.outputs.version }}
           generate_release_notes: true
           draft: false
           prerelease: false
           files: |
             assets/*.iso
             assets/SHA256SUMS
+
+      - name: 🧪 Release plan
+        if: ${{ inputs.dry_run }}
+        shell: bash
+        run: |
+          echo "========================================"
+          echo "🧪 YukihanaOS Release Dry Run"
+          echo "========================================"
+          echo
+          echo "Version:"
+          echo "  v${{ needs.version.outputs.version }}"
+          echo
+          echo "The following release assets have been prepared:"
+          find assets -maxdepth 1 -type f | sed 's/^/  - /'
+          echo
+          echo "A real release would:"
+          echo "  * Create branch:"
+          echo "      release/v${{ needs.version.outputs.version }}"
+          echo
+          echo "  * Create tag:"
+          echo "      v${{ needs.version.outputs.version }}"
+          echo
+          echo "  * Publish a GitHub Release"
+          echo
+          echo "  * Upload these assets:"
+          find assets -maxdepth 1 -type f | sed 's/^/      - /'
+          echo
+          echo "Dry run completed successfully."
+          echo "No branches, tags, or GitHub Releases were created."

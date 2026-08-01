@@ -1,4 +1,4 @@
-<Project Sdk="Cosmos.Sdk/3.0.78">
+<Project Sdk="Cosmos.Sdk/3.0.80">
   <PropertyGroup>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -20,8 +20,8 @@
     <Hour>$([System.DateTime]::UtcNow.ToString("HH"))</Hour>
     <Minute>$([System.DateTime]::UtcNow.ToString("mm"))</Minute>
 
-    <CosmosVersion>3, 0, 78</CosmosVersion>
-    <YukihanaVersion>2, 2, 0</YukihanaVersion>
+    <CosmosVersion>3.0.80</CosmosVersion>
+    <YukihanaVersion>2.2.0</YukihanaVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -52,9 +52,12 @@
            Text="Template contains @(VersionTemplate->Count()) lines."/>
 
     <PropertyGroup>
+      <CosmosVersionCommas>$([System.String]::Copy('$(CosmosVersion)').Replace(".", ", "))</CosmosVersionCommas>
+      <YukihanaVersionCommas>$([System.String]::Copy('$(YukihanaVersion)').Replace(".", ", "))</YukihanaVersionCommas>
+
       <GeneratedVersionInfo>@(VersionTemplate, '%0A')</GeneratedVersionInfo>
-      <GeneratedVersionInfo>$([System.String]::Copy('$(GeneratedVersionInfo)').Replace("/*COSMOS_VERSION*/ 0, 0, 0","$(CosmosVersion)"))</GeneratedVersionInfo>
-      <GeneratedVersionInfo>$([System.String]::Copy('$(GeneratedVersionInfo)').Replace("/*YUKIHANA_VERSION*/ 0, 0, 0","$(YukihanaVersion)"))</GeneratedVersionInfo>
+      <GeneratedVersionInfo>$([System.String]::Copy('$(GeneratedVersionInfo)').Replace("/*COSMOS_VERSION*/ 0, 0, 0","$(CosmosVersionCommas)"))</GeneratedVersionInfo>
+      <GeneratedVersionInfo>$([System.String]::Copy('$(GeneratedVersionInfo)').Replace("/*YUKIHANA_VERSION*/ 0, 0, 0","$(YukihanaVersionCommas)"))</GeneratedVersionInfo>
       <GeneratedVersionInfo>$([System.String]::Copy('$(GeneratedVersionInfo)').Replace("/*YEAR*/ 2000","$(Year)"))</GeneratedVersionInfo>
       <GeneratedVersionInfo>$([System.String]::Copy('$(GeneratedVersionInfo)').Replace("/*MONTH*/ 1","$(Month)"))</GeneratedVersionInfo>
       <GeneratedVersionInfo>$([System.String]::Copy('$(GeneratedVersionInfo)').Replace("/*DAY*/ 1","$(Day)"))</GeneratedVersionInfo>
@@ -79,8 +82,8 @@
 
   <!-- Core kernel packages -->
   <ItemGroup>
-    <PackageReference Include="Cosmos.Kernel" Version="3.0.78" />
-    <PackageReference Include="Cosmos.Kernel.System" Version="3.0.78" />
+    <PackageReference Include="Cosmos.Kernel" Version="3.0.80" />
+    <PackageReference Include="Cosmos.Kernel.System" Version="3.0.80" />
   </ItemGroup>
 
   <ItemGroup>
