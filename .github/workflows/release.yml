@@ -5,8 +5,8 @@ on:
     inputs:
       version:
         description: "Release version (e.g. 0.3.0)"
-        required: true
         type: string
+        required: false
 
 permissions:
   contents: write
@@ -15,9 +15,39 @@ env:
   DOTNET_VERSION: "10.0.*"
 
 jobs:
+  version:
+    name: Determine Version
+    runs-on: ubuntu-latest
+
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+
+    steps:
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v7
+
+      - name: 📖 Determine release version
+        id: version
+        shell: bash
+        run: |
+          PROJECT_VERSION=$(grep -oPm1 '(?<=<YukihanaVersion>)[^<]+' src/Yukihana/Yukihana.csproj)
+
+          INPUT_VERSION="${{ github.event.inputs.version }}"
+
+          if [ -n "$INPUT_VERSION" ]; then
+            VERSION="$INPUT_VERSION"
+            echo "Using workflow input version: $VERSION"
+          else
+            VERSION="$PROJECT_VERSION"
+            echo "Using project version: $VERSION"
+          fi
+
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
   build:
     name: Build (${{ matrix.arch }} / ${{ matrix.preset }})
     runs-on: ubuntu-latest
+    needs: version
 
     strategy:
       fail-fast: false
@@ -77,7 +107,33 @@ jobs:
 
       - name: 🚀 Build kernel
         working-directory: src/Yukihana
-        run: cosmos build -c Release -a ${{ matrix.arch }}
+        shell: bash
+        run: |
+          case "${{ matrix.arch }}" in
+            x64)
+              DEFINE="ARCH_X64"
+              COSMOS_ARCH="x64"
+              RUNTIME="linux-x64"
+              OUTPUT="./output-x64"
+              ;;
+            arm64)
+              DEFINE="ARCH_ARM64"
+              COSMOS_ARCH="arm64"
+              RUNTIME="linux-arm64"
+              OUTPUT="./output-arm64"
+              ;;
+            *)
+              echo "Unknown architecture: ${{ matrix.arch }}"
+              exit 1
+              ;;
+          esac
+          
+          dotnet publish \
+            -c Release \
+            -r "$RUNTIME" \
+            -p:DefineConstants="$DEFINE" \
+            -p:CosmosArch="$COSMOS_ARCH" \
+            -p:YukihanaVersion="${{ needs.version.outputs.version }}"
 
       - name: 🏷️ Rename ISO
         run: |
@@ -85,7 +141,7 @@ jobs:
 
           cp \
             src/Yukihana/output-${{ matrix.arch }}/Yukihana.iso \
-            release/YukihanaOS-v${{ github.event.inputs.version }}-${{ matrix.preset }}-${{ matrix.arch }}.iso
+            release/YukihanaOS-v${{ needs.version.outputs.version }}-${{ matrix.preset }}-${{ matrix.arch }}.iso
 
       - name: 📦 Upload ISO artifact
         uses: actions/upload-artifact@v7
@@ -95,7 +151,9 @@ jobs:
 
   release:
     name: Publish Release
-    needs: build
+    needs: 
+      - version
+      - build
     runs-on: ubuntu-latest
 
     permissions:
@@ -113,15 +171,15 @@ jobs:
           git config user.email "github-actions@github.com"
 
           git switch --detach "${{ github.sha }}"
-          git checkout -b release/v${{ github.event.inputs.version }}
-          git push origin release/v${{ github.event.inputs.version }}
+          git checkout -b release/v${{ needs.version.outputs.version }}
+          git push origin release/v${{ needs.version.outputs.version }}
 
       - name: 🔖 Create tag
         run: |
-          git switch release/v${{ github.event.inputs.version }}
-          git tag -a v${{ github.event.inputs.version }} \
-            -m "Yukihana release v${{ github.event.inputs.version }}"
-          git push --set-upstream origin v${{ github.event.inputs.version }}
+          git switch release/v${{ needs.version.outputs.version }}
+          git tag -a v${{ needs.version.outputs.version }} \
+            -m "Yukihana release v${{ needs.version.outputs.version }}"
+          git push --set-upstream origin v${{ needs.version.outputs.version }}
 
       - name: 📥 Download build artifacts
         uses: actions/download-artifact@v8
@@ -140,8 +198,8 @@ jobs:
       - name: 🚀 Publish GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: v${{ github.event.inputs.version }}
-          target_commitish: release/v${{ github.event.inputs.version }}
+          tag_name: v${{ needs.version.outputs.version }}
+          target_commitish: release/v${{ needs.version.outputs.version }}
           generate_release_notes: true
           draft: false
           prerelease: false
