@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE for details.
 
 using System.Collections.Concurrent;
+using Yukihana.Debug;
 
 namespace Yukihana.Security;
 
@@ -40,6 +41,7 @@ public static class UserManager
 
     public static User? GetUser(string name)
     {
+        Logger.GlobalLogger.Debug($"Trying to poll user with name {name}");
         return s_users.Values.FirstOrDefault(u => u.Name == name);
     }
 }

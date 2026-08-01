@@ -82,6 +82,7 @@ public sealed class Kernel : Sys.Kernel
 #endif
 
         Logger.GlobalLogger = s_kernelLogger;
+        Pbkdf2Sha256.DoLog = true;
 
         // Setup formatters and sinks
         var logger = new Logger("init");
@@ -229,12 +230,15 @@ public sealed class Kernel : Sys.Kernel
         // inherits credentials until logged in
         Thread userThread = SecurityManager.CreateThread(ShellThread);
 
-        userThread.Start();
-
         s_kernelLogger.Debug("Setting kernel thread to Lowest");
         Thread.CurrentThread.Priority = ThreadPriority.Lowest;
 
         s_kernelLogger.Debug("Starting idling");
+
+        LogDispatcher.Sinks.First(s => s.Sink is ConsoleSink).Enabled = false;
+
+        userThread.Start();
+
         while (userThread.IsAlive)
         {
             // idle thread
@@ -251,11 +255,58 @@ public sealed class Kernel : Sys.Kernel
 
         logger.Info("Reached user thread");
 
+        Console.WriteLine("\n\nLogging in");
+
+        User? user;
+
+        while (true)
+        {
+            Console.Write("Enter username: ");
+            string? login = Console.ReadLine();
+
+            if (!string.IsNullOrEmpty(login))
+            {
+                s_kernelLogger.Debug("login stirng is not empty");
+
+                user = UserManager.GetUser(login);
+                if (user is not null)
+                {
+                    s_kernelLogger.Debug("found user!");
+                    break;
+                }
+            }
+
+            s_kernelLogger.Debug("Couldn't find user");
+
+            Console.WriteLine($"Unable to find user '{login}'");
+        }
+
+        Console.Write("Enter password (will not be displayed): ");
+
+        while(true)
+        {
+            string? pass = Console.ReadLineHidden();
+
+            s_kernelLogger.Debug("Got password!");
+
+            if(AccountManager.Authenticate(user.Id, pass ?? ""))
+            {
+                s_kernelLogger.Debug("Passwords match");
+                break;
+            }
+
+            s_kernelLogger.Debug("Passwords do not match");
+
+            Console.WriteLine("Incorrect password. Try again");
+            Console.Write("Enter password (will not be displayed): ");
+        }
+
+        Console.WriteLine("Logged in as root");
 
         while (true)
         {
             // idle
-            Thread.Sleep(1000);
+            //Thread.Sleep(1000);
         }
     }
 

@@ -4,6 +4,7 @@
 using System.Collections.Concurrent;
 using System.Text;
 using acryptohashnet;
+using Yukihana.Debug;
 
 namespace Yukihana.Security;
 
@@ -77,6 +78,7 @@ public static class AccountManager
     public static void Remove(User user) => s_accounts.Remove(user.Id, out _);
 
     public static UserAccount? Get(User user) => s_accounts.GetValueOrDefault(user.Id);
+    public static UserAccount? Get(UserId user) => s_accounts.GetValueOrDefault(user);
 
     public static void Lock(User user)
     {
@@ -108,8 +110,9 @@ public static class AccountManager
         s_accounts.TryUpdate(user.Id, updAccount, account);
     }
 
-    public static bool Authenticate(User user, string password)
+    public static bool Authenticate(UserId user, string password)
     {
+        Logger.GlobalLogger.Trace("Authenticate(User, string) called");
         UserAccount? account = Get(user);
 
         if (account is null)
@@ -117,18 +120,26 @@ public static class AccountManager
             return false;
         }
 
+        Logger.GlobalLogger.Trace("Account is not null");
+
         if (account.Locked)
         {
             return false;
         }
 
+        Logger.GlobalLogger.Trace("Account is not locked");
+        
         PasswordHashAlgorithm algorithm = account.Password.UsedAlgorithm;
 
+        bool Pbkdf2Sha256Equal = account.Password.Hash.SequenceEqual(Pbkdf2Sha256.DeriveKey(
+            Encoding.UTF8.GetBytes(password), account.Password.Salt, Pbkdf2Sha256.Interations,
+            Pbkdf2Sha256.KeyLength));
+
+        Logger.GlobalLogger.Trace($"Hashes eauql? {Pbkdf2Sha256Equal}");
+        
         return algorithm switch
         {
-            PasswordHashAlgorithm.Pbkdf2Sha256 => account.Password.Hash == Pbkdf2Sha256.DeriveKey(
-                Encoding.UTF8.GetBytes(password), account.Password.Salt, Pbkdf2Sha256.Interations,
-                Pbkdf2Sha256.KeyLength),
+            PasswordHashAlgorithm.Pbkdf2Sha256 => Pbkdf2Sha256Equal,
             _ => false
         };
     }
