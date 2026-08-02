@@ -39,7 +39,6 @@ permissions:
   contents: read
   pull-requests: read
   issues: read
-  repository-projects: write
 
 jobs:
   update-status:
@@ -47,6 +46,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ secrets.CLIENT_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - name: 📝 Update linked issues in Project
         uses: actions/github-script@v9
         env:
@@ -61,7 +66,7 @@ jobs:
           TEST_ACTION: ${{ inputs.action }}
           DRY_RUN: ${{ inputs.dry-run }}
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ steps.app-token.outputs.token }}
           script: |
             let pr;
             let transition;
