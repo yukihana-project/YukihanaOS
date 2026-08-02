@@ -6,16 +6,33 @@
   "automergeType": "pr",
   "platformAutomerge": true,
 
+  "packageRules": [
+    {
+      "description": "Update Cosmos SDK, kernel packages, and project CosmosVersion together",
+      "matchPackageNames": [
+        "Cosmos.Sdk",
+        "Cosmos.Kernel",
+        "Cosmos.Kernel.System",
+      ],
+      "groupName": "Cosmos packages",
+      "groupSlug": "cosmos-packages",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false
+    }
+  ],
+
   "customManagers": [
     {
       "customType": "regex",
+      "description": "Update CosmosVersion property using Cosmos.Kernel versions",
       "managerFilePatterns": [
-        "/\\.csproj$/"
+        "/^src/Yukihana/Yukihana\\.csproj$/"
       ],
       "matchStrings": [
         "<CosmosVersion>(?<currentValue>[^<]+)</CosmosVersion>"
       ],
-      "depNameTemplate": "Cosmos.Kernel",
+      "depNameTemplate": "CosmosVersion",
+      "packageNameTemplate": "Cosmos.Kernel",
       "datasourceTemplate": "nuget",
       "versioningTemplate": "nuget",
       "autoReplaceStringTemplate": "<CosmosVersion>{{{newValue}}}</CosmosVersion>"
