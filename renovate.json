@@ -9,14 +9,14 @@
   "packageRules": [
     {
       "description": "Group all Cosmos NuGet packages and the internal custom property together",
-      "matchPackagePatterns": [
-        "^Cosmos\\.",
-        "^cosmos-version-property$"
-      ],
       "groupName": "Cosmos packages",
       "groupSlug": "cosmos-packages",
       "separateMajorMinor": false,
-      "separateMinorPatch": false
+      "separateMinorPatch": false,
+      "matchPackageNames": [
+        "/^Cosmos\\./",
+        "/^cosmos-version-property$/"
+      ]
     }
   ],
 
@@ -33,7 +33,6 @@
       "depNameTemplate": "CosmosVersion",
       "packageNameTemplate": "cosmos-version-property",
       "datasourceTemplate": "nuget",
-      "lookupNameTemplate": "Cosmos.Kernel",
       "versioningTemplate": "nuget",
       "autoReplaceStringTemplate": "<CosmosVersion>{{{newValue}}}</CosmosVersion>"
     }
