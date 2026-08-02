@@ -8,12 +8,10 @@
 
   "packageRules": [
     {
-      "description": "Group Cosmos NuGet packages and the custom CosmosVersion property using exact names",
-      "matchPackageNames": [
-        "Cosmos.Sdk",
-        "Cosmos.Kernel",
-        "Cosmos.Kernel.System",
-        "CosmosVersion"
+      "description": "Group all Cosmos NuGet packages and the internal custom property together",
+      "matchPackagePatterns": [
+        "^Cosmos\\.",
+        "^cosmos-version-property$"
       ],
       "groupName": "Cosmos packages",
       "groupSlug": "cosmos-packages",
@@ -33,7 +31,7 @@
         "<CosmosVersion>(?<currentValue>[^<]+)</CosmosVersion>"
       ],
       "depNameTemplate": "CosmosVersion",
-      "packageNameTemplate": "CosmosVersion",
+      "packageNameTemplate": "cosmos-version-property",
       "datasourceTemplate": "nuget",
       "lookupNameTemplate": "Cosmos.Kernel",
       "versioningTemplate": "nuget",
