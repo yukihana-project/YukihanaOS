@@ -31,26 +31,25 @@ namespace Yukihana;
 
 public sealed class Kernel : Sys.Kernel
 {
-    public static AuthService AuthService { get; private set; } = null!;
-    public static UserSession UserSession { get; private set; } = null!;
-
     public static DateTime BootTime { get; }
 
-    private const string RAMFS_PATH = "Yukihana";
-    private const string RAMFS_FILE = "initramfs.cpio.gz";
+    private const string RamfsPath = "Yukihana";
+    private const string RamfsFile = "initramfs.cpio.gz";
 
-    private static string _ramfs_resource_key => string.Join('.', RAMFS_PATH, RAMFS_FILE);
+    private static string RamfsResourceKey => string.Join('.', RamfsPath, RamfsFile);
 
     private static readonly Logger s_kernelLogger;
     private static readonly VfsConfigManager s_vfsMan;
+
+    public static readonly SecurityManager SecurityManager = new();
 
     static Kernel()
     {
         BootTime = DateTime.Now;
 
-        s_kernelLogger = new("kern");
+        s_kernelLogger = new Logger("kern");
 
-        s_vfsMan = new();
+        s_vfsMan = new VfsConfigManager();
     }
 
     protected override void BeforeRun()
@@ -82,8 +81,12 @@ public sealed class Kernel : Sys.Kernel
         LogDispatcher.RegisterSink(new SerialSink(), new DeltaFormatter());
 #endif
 
+        Logger.GlobalLogger = s_kernelLogger;
+
         // Setup formatters and sinks
         var logger = new Logger("init");
+
+        SecurityManager.Set(Thread.CurrentThread, SecurityContext.Root);
 
         logger.Trace("Parsed arguments:");
 
@@ -109,12 +112,12 @@ public sealed class Kernel : Sys.Kernel
 
         VfsInit.InitVfs(logger, s_vfsMan);
 
-        logger.Info($"Fetching \"{RAMFS_FILE}\".");
+        logger.Info($"Fetching \"{RamfsFile}\".");
         byte[]? ramfsBytes = null;
 
         var assembly = Assembly.GetExecutingAssembly();
 
-        using (var result = assembly.GetManifestResourceStream(_ramfs_resource_key).ToOption())
+        using (var result = assembly.GetManifestResourceStream(RamfsResourceKey).ToOption())
         using (var memStream = new MemoryStream())
         {
             if (result.IsSome)
@@ -166,7 +169,7 @@ public sealed class Kernel : Sys.Kernel
         var fontGroup = new OptionalResourceGroup<FontState>(
             name: "Fonts",
             createState: () => new FontState(),
-            commit: state => { },
+            commit: _ => { },
             provider: new VfsResourceProvider()
         );
 
@@ -223,7 +226,78 @@ public sealed class Kernel : Sys.Kernel
 
         logger.Info($"Base kernel initialization finished at {DateTime.Now:dd-MM-yyyy HH:mm:ss.fff}.");
 
-        throw new Exception("Returned from init");
+        LogDispatcher.Sinks.First(r => r.Sink is ConsoleSink).Enabled = false;
+
+        Thread user = SecurityManager.CreateThread(UserThread);
+        Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+
+        user.Start();
+        user.Join();
+
+        while (true)
+        {
+            // idle
+            Thread.Sleep(1000);
+        }
+    }
+
+    private static void UserThread()
+    {
+        s_kernelLogger.Trace("UserThread");
+
+        Console.WriteLine("\n\nLogging in");
+
+        User? user;
+
+        while (true)
+        {
+            Console.Write("Enter username: ");
+            string? login = Console.ReadLine();
+
+            if (!string.IsNullOrEmpty(login))
+            {
+                s_kernelLogger.Debug("login stirng is not empty");
+
+                user = UserManager.GetUser(login);
+                if (user is not null)
+                {
+                    s_kernelLogger.Debug("found user!");
+                    break;
+                }
+            }
+
+            s_kernelLogger.Debug("Couldn't find user");
+
+            Console.WriteLine($"Unable to find user '{login}'");
+        }
+
+        Console.Write("Enter password (will not be displayed): ");
+
+        while (true)
+        {
+            string? pass = Console.ReadLineHidden();
+
+            s_kernelLogger.Debug("Got password!");
+
+            if (AccountManager.Authenticate(user.Id, pass ?? ""))
+            {
+                s_kernelLogger.Debug("Passwords match");
+                break;
+            }
+
+            s_kernelLogger.Debug("Passwords do not match");
+
+            Console.WriteLine("Incorrect password. Try again");
+            Console.Write("Enter password (will not be displayed): ");
+        }
+
+        Console.WriteLine("Logged in as root");
+        Console.WriteLine("Looping forever");
+
+        while (true)
+        {
+            Thread.Sleep(10000);
+        }
     }
 
     protected override void Run()

@@ -1,52 +1,31 @@
 // Yukihana OS 2026 Yukihana OS Contributors
-// Licensed under the Apache 2.0 License. See LICENSE for details.
+// Licensed under the Apache License, Version 2.0. See LICENSE for details.
+
+using System.Collections.Immutable;
 
 namespace Yukihana.Security;
 
-public record User(
-    int Id,
-    string Name,
-    int PrimaryGroupId,
-    string HomeDirectory,
-    string Shell,
-    string PasswordHash)
+public sealed class User
 {
-    public IReadOnlyCollection<int> SecondaryGroupIds { get; init; } = [];
+    public required UserId Id { get; init; }
 
-    public static readonly User None = new(
-        Id: -1,
-        Name: "nobody",
-        PrimaryGroupId: -1,
-        HomeDirectory: "/nonexistent",
-        Shell: "nologin",
-        PasswordHash: string.Empty);
+    public required string Name { get; init; }
 
-    public static readonly User Guest = new(
-        Id: 65534,
-        Name: "guest",
-        PrimaryGroupId: 65534,
-        HomeDirectory: "/tmp",
-        Shell: "restricted-shell",
-        PasswordHash: string.Empty);
+    public required GroupId PrimaryGroup { get; init; }
 
-    public bool IsInGroup(int groupId) =>
-        groupId == PrimaryGroupId || SecondaryGroupIds.Contains(groupId);
+    public required ImmutableHashSet<GroupId> SupplementaryGroups { get; init; }
 
-    public IEnumerable<int> GetAllGroupIds()
+    public required CapabilitySet DefaultCapabilities { get; init; }
+
+    public bool Enabled { get; init; } = true;
+
+    public static readonly User Root = new()
     {
-        yield return PrimaryGroupId;
-
-        foreach (int groupId in SecondaryGroupIds)
-        {
-            if (groupId != PrimaryGroupId)
-            {
-                yield return groupId;
-            }
-        }
-    }
-
-    public User WithSecondaryGroups(IEnumerable<int> groupIds) => this with
-    {
-        SecondaryGroupIds = [.. groupIds.Where(id => id >= 0).Distinct()]
+        DefaultCapabilities = CapabilitySet.Root,
+        Enabled = true,
+        Id = UserId.Root,
+        Name = "root",
+        PrimaryGroup = GroupId.Root,
+        SupplementaryGroups = []
     };
 }

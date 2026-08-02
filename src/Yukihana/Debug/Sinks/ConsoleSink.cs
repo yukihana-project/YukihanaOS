@@ -9,9 +9,13 @@ namespace Yukihana.Debug.Sinks;
 internal sealed class ConsoleSink : ILogSink
 {
     public LogLevel MinimumLevel { get; set; } = LogLevel.Info;
+    private static readonly Lock s_sinksLock = new();
 
     public void Write(ReadOnlySpan<char> text)
     {
-        AnsiConsole.WriteLine(new string(text));
+        lock (s_sinksLock)
+        {
+            AnsiConsole.WriteLine(text);
+        }
     }
 }

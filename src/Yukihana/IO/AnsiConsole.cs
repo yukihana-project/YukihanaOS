@@ -1,15 +1,10 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache License, Version 2.0. See LICENSE for details.
 
-using System.Text.RegularExpressions;
-
 namespace Yukihana.IO;
 
-public static partial class AnsiConsole
+public static class AnsiConsole
 {
-    private static readonly Regex AnsiRegex =
-        AnsiRegexG();
-
     private static readonly Dictionary<int, ConsoleColor> ForegroundColors = new()
     {
         [30] = ConsoleColor.Black,
@@ -53,81 +48,62 @@ public static partial class AnsiConsole
     };
 
     public static void Write(string text)
+        => Write(text.AsSpan());
+
+    public static void Write(ReadOnlySpan<char> text)
     {
-        var defaultForeground = Console.ForegroundColor;
-        var defaultBackground = Console.BackgroundColor;
+        ConsoleColor defaultForeground = Console.ForegroundColor;
+        ConsoleColor defaultBackground = Console.BackgroundColor;
 
         bool bold = false;
-        int lastIndex = 0;
+        int segmentStart = 0;
+        int index = 0;
 
-        foreach (Match match in AnsiRegex.Matches(text))
+        while (index < text.Length)
         {
-            // Write text preceding ANSI sequence
-            if (match.Index > lastIndex)
+            if (!IsAnsiSequenceStart(text, index))
             {
-                Console.Write(text.Substring(lastIndex, match.Index - lastIndex));
+                index++;
+                continue;
             }
 
-            var codes = match.Groups[1].Value;
-
-            if (string.IsNullOrEmpty(codes))
+            int codesStart = index + 2;
+            int codesEnd = text[codesStart..].IndexOf('m');
+            if (codesEnd < 0)
             {
+                break;
+            }
+
+            codesEnd += codesStart;
+            ReadOnlySpan<char> codes = text[codesStart..codesEnd];
+            if (!IsAnsiCodes(codes))
+            {
+                index++;
+                continue;
+            }
+
+            if (index > segmentStart)
+            {
+                Console.Write(text[segmentStart..index]);
+            }
+
+            if (codes.IsEmpty)
+            {
+                bold = false;
                 Reset(defaultForeground, defaultBackground);
             }
             else
             {
-                foreach (var part in codes.Split(';'))
-                {
-                    if (!int.TryParse(part, out int code))
-                    {
-                        continue;
-                    }
-
-                    switch (code)
-                    {
-                        case 0:
-                            bold = false;
-                            Reset(defaultForeground, defaultBackground);
-                            break;
-
-                        case 1:
-                            bold = true;
-                            break;
-
-                        case 22:
-                            bold = false;
-                            break;
-
-                        case 39:
-                            Console.ForegroundColor = defaultForeground;
-                            break;
-
-                        case 49:
-                            Console.BackgroundColor = defaultBackground;
-                            break;
-
-                        default:
-                            if (ForegroundColors.TryGetValue(code, out var fg))
-                            {
-                                Console.ForegroundColor = bold
-                                    ? BrightEquivalent(fg)
-                                    : fg;
-                            }
-                            else if (BackgroundColors.TryGetValue(code, out var bg))
-                            {
-                                Console.BackgroundColor = bg;
-                            }
-                            break;
-                    }
-                }
+                ApplyCodes(codes, defaultForeground, defaultBackground, ref bold);
             }
 
-            lastIndex = match.Index + match.Length;
+            index = codesEnd + 1;
+            segmentStart = index;
         }
 
-        if (lastIndex < text.Length)
+        if (segmentStart < text.Length)
         {
-            Console.Write(text.AsSpan(lastIndex));
+            Console.Write(text[segmentStart..]);
         }
 
         Console.ForegroundColor = defaultForeground;
@@ -135,9 +111,101 @@ public static partial class AnsiConsole
     }
 
     public static void WriteLine(string text)
+        => WriteLine(text.AsSpan());
+
+    public static void WriteLine(ReadOnlySpan<char> text)
     {
         Write(text);
         Console.WriteLine();
+    }
+
+    private static void ApplyCodes(
+        ReadOnlySpan<char> codes,
+        ConsoleColor defaultForeground,
+        ConsoleColor defaultBackground,
+        ref bool bold)
+    {
+        while (!codes.IsEmpty)
+        {
+            int separator = codes.IndexOf(';');
+            ReadOnlySpan<char> part = separator < 0
+                ? codes
+                : codes[..separator];
+
+            if (int.TryParse(part, out int code))
+            {
+                ApplyCode(code, defaultForeground, defaultBackground, ref bold);
+            }
+
+            if (separator < 0)
+            {
+                break;
+            }
+
+            codes = codes[(separator + 1)..];
+        }
+    }
+
+    private static void ApplyCode(
+        int code,
+        ConsoleColor defaultForeground,
+        ConsoleColor defaultBackground,
+        ref bool bold)
+    {
+        switch (code)
+        {
+            case 0:
+                bold = false;
+                Reset(defaultForeground, defaultBackground);
+                break;
+
+            case 1:
+                bold = true;
+                break;
+
+            case 22:
+                bold = false;
+                break;
+
+            case 39:
+                Console.ForegroundColor = defaultForeground;
+                break;
+
+            case 49:
+                Console.BackgroundColor = defaultBackground;
+                break;
+
+            default:
+                if (ForegroundColors.TryGetValue(code, out var fg))
+                {
+                    Console.ForegroundColor = bold
+                        ? BrightEquivalent(fg)
+                        : fg;
+                }
+                else if (BackgroundColors.TryGetValue(code, out var bg))
+                {
+                    Console.BackgroundColor = bg;
+                }
+                break;
+        }
+    }
+
+    private static bool IsAnsiSequenceStart(ReadOnlySpan<char> text, int index)
+        => index + 1 < text.Length
+            && text[index] == '\u001b'
+            && text[index + 1] == '[';
+
+    private static bool IsAnsiCodes(ReadOnlySpan<char> codes)
+    {
+        foreach (char code in codes)
+        {
+            if (code != ';' && !char.IsAsciiDigit(code))
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private static void Reset(ConsoleColor fg, ConsoleColor bg)
@@ -161,7 +229,4 @@ public static partial class AnsiConsole
             _ => color
         };
     }
-
-    [GeneratedRegex(@"\x1B\[([0-9;]*)m")]
-    private static partial Regex AnsiRegexG();
 }

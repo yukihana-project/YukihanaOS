@@ -3,9 +3,9 @@
 
 namespace Yukihana.Security;
 
-public sealed class Group
+public enum PasswordHashAlgorithm
 {
-    public required GroupId Id { get; init; }
-
-    public required string Name { get; init; }
+    Pbkdf2Sha256
 }
+
+public sealed record PasswordHash(byte[] Salt, byte[] Hash, PasswordHashAlgorithm UsedAlgorithm);
