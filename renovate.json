@@ -14,11 +14,10 @@
         "Cosmos.Kernel",
         "Cosmos.Kernel.System"
       ],
-      "matchDepNames": [
-        "CosmosVersion"
-      ],
       "groupName": "Cosmos packages",
-      "groupSlug": "cosmos-packages"
+      "groupSlug": "cosmos-packages",
+      "separateMajorMinor": false,
+      "separateMinorPatch": false
     }
   ],
 
