@@ -1,3 +1,4 @@
+
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["config:recommended"],
@@ -6,11 +7,38 @@
   "automergeType": "pr",
   "platformAutomerge": true,
 
+  "packageRules": [
+    {
+      "description": "Update Cosmos SDK, kernel packages, and project CosmosVersion together",
+      "matchPackageNames": [
+        "Cosmos.Sdk",
+        "Cosmos.Kernel",
+        "Cosmos.Kernel.System"
+      ],
+      "groupName": "Cosmos packages",
+      "groupSlug": "cosmos-packages"
+    }
+  ],
+
   "customManagers": [
     {
       "customType": "regex",
+      "description": "Update Cosmos.Sdk used as the MSBuild project SDK",
       "managerFilePatterns": [
-        "/\\.csproj$/"
+        "/^src/Yukihana/Yukihana\\.csproj$/"
+      ],
+      "matchStrings": [
+        "<Project\\s+Sdk=\"(?<depName>Cosmos\\.Sdk)/(?<currentValue>[^\"]+)\""
+      ],
+      "datasourceTemplate": "nuget",
+      "versioningTemplate": "nuget",
+      "autoReplaceStringTemplate": "<Project Sdk=\"{{{depName}}}/{{{newValue}}}\""
+    },
+    {
+      "customType": "regex",
+      "description": "Update CosmosVersion from the Cosmos.Kernel package version",
+      "managerFilePatterns": [
+        "/^src/Yukihana/Yukihana\\.csproj$/"
       ],
       "matchStrings": [
         "<CosmosVersion>(?<currentValue>[^<]+)</CosmosVersion>"
