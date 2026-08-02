@@ -12,7 +12,9 @@
       "matchPackageNames": [
         "Cosmos.Sdk",
         "Cosmos.Kernel",
-        "Cosmos.Kernel.System",
+        "Cosmos.Kernel.System"
+      ],
+      "matchDepNames": [
         "CosmosVersion"
       ],
       "groupName": "Cosmos packages",
@@ -23,19 +25,6 @@
   ],
 
   "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Update Cosmos.Sdk used as the MSBuild project SDK",
-      "managerFilePatterns": [
-        "/^src/Yukihana/Yukihana\\.csproj$/"
-      ],
-      "matchStrings": [
-        "<Project\\s+Sdk=\"(?<depName>Cosmos\\.Sdk)/(?<currentValue>[^\"]+)\""
-      ],
-      "datasourceTemplate": "nuget",
-      "versioningTemplate": "nuget",
-      "autoReplaceStringTemplate": "<Project Sdk=\"{{{depName}}}/{{{newValue}}}\""
-    },
     {
       "customType": "regex",
       "description": "Update CosmosVersion property using Cosmos.Kernel versions",
