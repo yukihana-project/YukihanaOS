@@ -1,4 +1,4 @@
-<Project Sdk="Cosmos.Sdk/3.0.80">
+<Project Sdk="Cosmos.Sdk/3.0.81">
   <PropertyGroup>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
