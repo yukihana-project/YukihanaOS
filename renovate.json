@@ -12,7 +12,8 @@
       "matchPackageNames": [
         "Cosmos.Sdk",
         "Cosmos.Kernel",
-        "Cosmos.Kernel.System"
+        "Cosmos.Kernel.System",
+        "CosmosVersion"
       ],
       "groupName": "Cosmos packages",
       "groupSlug": "cosmos-packages",
