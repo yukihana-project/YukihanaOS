@@ -15,7 +15,7 @@ internal sealed class ConsoleSink : ILogSink
     {
         lock (s_sinksLock)
         {
-            AnsiConsole.WriteLine(new string(text));
+            AnsiConsole.WriteLine(text);
         }
     }
 }

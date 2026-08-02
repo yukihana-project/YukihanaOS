@@ -36,8 +36,6 @@ public static class ConsoleExtensions
 
             string result = sb.ToString();
 
-            Logger.GlobalLogger.Trace($"ReadLineHidden -> {result}");
-
             return string.IsNullOrEmpty(result) ? null : result;
         }
     }

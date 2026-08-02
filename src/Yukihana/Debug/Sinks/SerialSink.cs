@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE for details.
 
 using Cosmos.Kernel.Core.IO;
+using Yukihana.Core.Extensions.Cosmos;
 using Yukihana.Debug.Interfaces;
 
 namespace Yukihana.Debug.Sinks;
@@ -15,7 +16,8 @@ internal sealed class SerialSink : ILogSink
     {
         lock (s_sinksLock)
         {
-            Serial.WriteString(new string(text) + '\n');
+            Serial.WriteReadOnlyString(text);
+            Serial.ComWrite((byte)'\n');
         }
     }
 }
