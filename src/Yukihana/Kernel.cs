@@ -231,7 +231,7 @@ public sealed class Kernel : Sys.Kernel
         Thread user = SecurityManager.CreateThread(UserThread);
         Thread.CurrentThread.Priority = ThreadPriority.Lowest;
 
-        s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
+        s_kernelLogger.Trace($"Current context is: {SecurityManager.Current}");
 
         user.Start();
         user.Join();
@@ -245,8 +245,8 @@ public sealed class Kernel : Sys.Kernel
 
     private static void UserThread()
     {
-        s_kernelLogger.Info("UserThread");
-        s_kernelLogger.Info($"Current context is: {SecurityManager.Current}");
+        s_kernelLogger.Trace("UserThread");
+        s_kernelLogger.Trace($"Current context is: {SecurityManager.Current}");
 
         Console.WriteLine("\n\nLogging in");
 
