@@ -8,15 +8,16 @@
 
   "packageRules": [
     {
-      "description": "Group all Cosmos NuGet packages and the internal custom property together",
+      "description": "Update Cosmos SDK, kernel packages, and project CosmosVersion together",
+      "matchPackageNames": [
+        "Cosmos.Sdk",
+        "Cosmos.Kernel",
+        "Cosmos.Kernel.System",
+      ],
       "groupName": "Cosmos packages",
       "groupSlug": "cosmos-packages",
       "separateMajorMinor": false,
-      "separateMinorPatch": false,
-      "matchPackageNames": [
-        "/^Cosmos\\./",
-        "/^cosmos-version-property$/"
-      ]
+      "separateMinorPatch": false
     }
   ],
 
@@ -25,13 +26,13 @@
       "customType": "regex",
       "description": "Update CosmosVersion property using Cosmos.Kernel versions",
       "managerFilePatterns": [
-        "^src/Yukihana/Yukihana\\.csproj$"
+        "/^src/Yukihana/Yukihana\\.csproj$/"
       ],
       "matchStrings": [
         "<CosmosVersion>(?<currentValue>[^<]+)</CosmosVersion>"
       ],
       "depNameTemplate": "CosmosVersion",
-      "packageNameTemplate": "cosmos-version-property",
+      "packageNameTemplate": "Cosmos.Kernel",
       "datasourceTemplate": "nuget",
       "versioningTemplate": "nuget",
       "autoReplaceStringTemplate": "<CosmosVersion>{{{newValue}}}</CosmosVersion>"
