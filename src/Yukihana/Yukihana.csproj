@@ -20,7 +20,7 @@
     <Hour>$([System.DateTime]::UtcNow.ToString("HH"))</Hour>
     <Minute>$([System.DateTime]::UtcNow.ToString("mm"))</Minute>
 
-    <CosmosVersion>3.0.81</CosmosVersion>
+    <CosmosVersion>3.0.82</CosmosVersion>
     <YukihanaVersion>2.2.0</YukihanaVersion>
   </PropertyGroup>
 
