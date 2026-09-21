@@ -1,4 +1,4 @@
-<Project Sdk="Cosmos.Sdk/3.0.87">
+<Project Sdk="Cosmos.Sdk/3.0.88">
   <PropertyGroup>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
@@ -82,8 +82,8 @@
 
   <!-- Core kernel packages -->
   <ItemGroup>
-    <PackageReference Include="Cosmos.Kernel" Version="3.0.87" />
-    <PackageReference Include="Cosmos.Kernel.System" Version="3.0.87" />
+    <PackageReference Include="Cosmos.Kernel" Version="3.0.88" />
+    <PackageReference Include="Cosmos.Kernel.System" Version="3.0.88" />
   </ItemGroup>
 
   <ItemGroup>
