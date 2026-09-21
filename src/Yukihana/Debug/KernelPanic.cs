@@ -2,9 +2,11 @@
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
 using System.Runtime.CompilerServices;
-using Cosmos.Kernel.Core.IO;
 using Cosmos.Kernel.HAL;
+using Cosmos.Kernel.System;
+using Cosmos.Kernel.System.Diagnostics;
 using Yukihana.Core;
+using Yukihana.Security;
 
 namespace Yukihana.Debug;
 
@@ -27,8 +29,6 @@ public static class KernelPanic
             MinimalFailSafePanic("Recursive panic detected.");
         }
 
-        PlatformHAL.CpuOps?.DisableInterrupts();
-
         LogDispatcher.RingBufferEnabled = false;
 
         lock (s_lock)
@@ -36,7 +36,7 @@ public static class KernelPanic
             ThreadLockedPanic(reason, m, f, l);
         }
 
-        PlatformHAL.CpuOps?.Halt();
+        Power.Halt();
 
         for (; ; )
         {
@@ -81,15 +81,13 @@ public static class KernelPanic
 
     private static void MinimalFailSafePanic(string reason)
     {
-        PlatformHAL.CpuOps?.DisableInterrupts();
-
-        Serial.WriteString("\n*** FATAL RECURSIVE KERNEL PANIC ***\n");
-        Serial.WriteString(reason);
-        Serial.WriteString("\n");
+        Log.WriteString("\n*** FATAL RECURSIVE KERNEL PANIC ***\n");
+        Log.WriteString(reason);
+        Log.WriteString("\n");
 
         while (true)
         {
-            PlatformHAL.CpuOps?.Halt();
+            Power.Halt();
         }
     }
 
@@ -102,16 +100,16 @@ public static class KernelPanic
 
     private static void MirrorToSerial(string reason, string m, string f, int l, ReadOnlySpan<LogEvent> logs)
     {
-        Serial.WriteString("\n*** KERNEL PANIC ***\n");
-        Serial.WriteString($"Kernel: {KernelInfoString(VersionInfo.Kernel)}\n");
-        Serial.WriteString($"Framework: {FrameworkInfoString(VersionInfo.Framework)}\n");
-        Serial.WriteString($"Reason: {reason}\n");
-        Serial.WriteString($"At: {m} ({Path.GetFileName(f)}:{l})\n");
+        Log.WriteString("\n*** KERNEL PANIC ***\n");
+        Log.WriteString($"Kernel: {KernelInfoString(VersionInfo.Kernel)}\n");
+        Log.WriteString($"Framework: {FrameworkInfoString(VersionInfo.Framework)}\n");
+        Log.WriteString($"Reason: {reason}\n");
+        Log.WriteString($"At: {m} ({Path.GetFileName(f)}:{l})\n");
 
         foreach (LogEvent e in logs)
         {
             TimeSpan delta = e.Timestamp - Kernel.BootTime;
-            Serial.WriteString($"[{delta.TotalSeconds,10:0.000000}] {e.Source}: {e.Message}\n");
+            Log.WriteString($"[{delta.TotalSeconds,10:0.000000}] {e.Source}: {e.Message}\n");
         }
     }
 

@@ -85,6 +85,7 @@ jobs:
         with:
           languages: csharp
           build-mode: manual
+          queries: security-and-quality
 
       - name: 🛠 Build YKConfig
         working-directory: src/Yukihana.BuildConfig

@@ -1,13 +1,14 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
+using System.Diagnostics.CodeAnalysis;
 using Cosmos.Kernel.HAL.Vfs;
 
 namespace Yukihana.Vfs.Filesystem.InitFs;
 
 internal sealed class InitfsInodeOperations : IInodeOperations
 {
-    public bool Lookup(IVfsInode dir, ReadOnlySpan<char> name, out IVfsInode? child)
+    public bool Lookup(IVfsInode dir, ReadOnlySpan<char> name, [NotNullWhen(true)] out IVfsInode? child)
     {
         if (dir is not InitfsInode dirInode)
         {
@@ -34,21 +35,21 @@ internal sealed class InitfsInodeOperations : IInodeOperations
         return true;
     }
 
-    public bool Create(IVfsInode dir, ReadOnlySpan<char> name, ModeEnum mode, out IVfsInode? inode)
+    public bool Create(IVfsInode dir, ReadOnlySpan<char> name, VfsMode mode, [NotNullWhen(true)] out IVfsInode? inode)
     {
         // Read-only filesystem - no creation allowed
         inode = null;
         return false;
     }
 
-    public bool Mkdir(IVfsInode dir, ReadOnlySpan<char> name, ModeEnum mode, out IVfsInode? inode)
+    public bool Mkdir(IVfsInode dir, ReadOnlySpan<char> name, VfsMode mode, [NotNullWhen(true)] out IVfsInode? inode)
     {
         // Read-only filesystem - no directory creation allowed
         inode = null;
         return false;
     }
 
-    public bool Symlink(IVfsInode dir, ReadOnlySpan<char> name, ReadOnlySpan<char> target, out IVfsInode? inode)
+    public bool Symlink(IVfsInode dir, ReadOnlySpan<char> name, ReadOnlySpan<char> target, [NotNullWhen(true)] out IVfsInode? inode)
     {
         // Read-only filesystem - no symlinks creation allowed
         inode = null;

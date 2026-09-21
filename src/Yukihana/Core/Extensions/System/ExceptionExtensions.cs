@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using Cosmos.Kernel.Core.IO;
+using Cosmos.Kernel.System.Diagnostics;
 using Yukihana.Debug;
 
 namespace Yukihana.Core.Extensions.System;
@@ -57,7 +58,7 @@ public static partial class ExceptionExtensions
     {
         try
         {
-            Serial.WriteString("Trying to build reason from exception\n");
+            Log.WriteString("Trying to build reason from exception\n");
             var sb = new StringBuilder(512);
 
             if (!string.IsNullOrWhiteSpace(message))
@@ -74,12 +75,12 @@ public static partial class ExceptionExtensions
         {
             try
             {
-                Serial.WriteString("Unable to format exception. Fallback to `type: msg`\n");
+                Log.WriteString("Unable to format exception. Fallback to `type: msg`\n");
                 return ex.GetType().FullName + ": " + ex.Message;
             }
             catch
             {
-                Serial.WriteString("Skipping exception extraction\n");
+                Log.WriteString("Skipping exception extraction\n");
                 return "Fatal exception (unprintable)";
             }
         }
@@ -87,23 +88,23 @@ public static partial class ExceptionExtensions
 
     private static void AppendException(StringBuilder sb, Exception ex, int depth)
     {
-        Serial.WriteString("Extracting exception data\n");
+        Log.WriteString("Extracting exception data\n");
         if (depth > 8)
         {
             sb.Append("\n[Truncated exception chain]");
             return;
         }
 
-        Serial.WriteString("Extracting type\n");
+        Log.WriteString("Extracting type\n");
 
         Type type = ex.GetType();
 
-        Serial.WriteString("Appending type name\n");
+        Log.WriteString("Appending type name\n");
         sb.Append(type.FullName);
         sb.Append(": ");
         sb.Append(ex.Message);
 
-        Serial.WriteString("Reading stack trace\n");
+        Log.WriteString("Reading stack trace\n");
 
         sb.Append("\nStack trace:");
 

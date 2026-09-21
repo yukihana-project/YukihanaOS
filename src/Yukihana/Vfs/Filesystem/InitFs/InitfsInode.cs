@@ -19,9 +19,9 @@ internal sealed class InitfsInode : IVfsInode
 
         Mode = kind switch
         {
-            ArchiveEntryKind.Directory => ModeEnum.Directory,
-            ArchiveEntryKind.SymbolicLink => ModeEnum.SymbolicLink,
-            _ => ModeEnum.RegularFile
+            ArchiveEntryKind.Directory => VfsMode.Directory,
+            ArchiveEntryKind.SymbolicLink => VfsMode.SymbolicLink,
+            _ => VfsMode.RegularFile
         };
 
         UserId = 0;
@@ -42,7 +42,7 @@ internal sealed class InitfsInode : IVfsInode
 
     public string Path { get; }
 
-    public ModeEnum Mode { get; set; }
+    public VfsMode Mode { get; set; }
 
     public int UserId { get; set; }
 
