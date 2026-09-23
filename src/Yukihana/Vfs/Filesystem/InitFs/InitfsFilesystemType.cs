@@ -183,13 +183,13 @@ internal sealed class InitfsFilesystemType : IVfsFilesystemType
         return root;
     }
 
-    private ModeEnum GetModeFromArchive(ArchiveEntry entry)
+    private VfsMode GetModeFromArchive(ArchiveEntry entry)
     {
         return entry.Kind switch
         {
-            ArchiveEntryKind.Directory => ModeEnum.Directory,
-            ArchiveEntryKind.SymbolicLink => ModeEnum.SymbolicLink,
-            _ => ModeEnum.RegularFile
+            ArchiveEntryKind.Directory => VfsMode.Directory,
+            ArchiveEntryKind.SymbolicLink => VfsMode.SymbolicLink,
+            _ => VfsMode.RegularFile
         };
     }
 }

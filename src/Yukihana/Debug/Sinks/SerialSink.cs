@@ -1,8 +1,7 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache License, Version 2.0. See LICENSE for details.
 
-using Cosmos.Kernel.Core.IO;
-using Yukihana.Core.Extensions.Cosmos;
+using Cosmos.Kernel.System.Diagnostics;
 using Yukihana.Debug.Interfaces;
 
 namespace Yukihana.Debug.Sinks;
@@ -16,8 +15,7 @@ internal sealed class SerialSink : ILogSink
     {
         lock (s_sinksLock)
         {
-            Serial.WriteReadOnlyString(text);
-            Serial.ComWrite((byte)'\n');
+            Log.WriteString(new string(text) + '\n');
         }
     }
 }
