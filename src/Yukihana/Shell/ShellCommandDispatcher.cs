@@ -11,22 +11,10 @@ public sealed class ShellCommandDispatcher(ShellCommandRegistry registry)
 {
     private ShellCommandResult ExecuteInForegroundThread(IShellCommand command, ShellCommandContext context)
     {
-        SecurityContext current = Kernel.SecurityManager.Current;
-
         ShellCommandResult result = new ShellCommandResult.Error("Command threw exception");
 
-        Thread thread = new(() =>
-        {
-            try
-            {
-                Kernel.SecurityManager.Set(Thread.CurrentThread, current);
-
-                result = command.Execute(context);
-            }
-            finally
-            {
-                Kernel.SecurityManager.Remove(Thread.CurrentThread);
-            }
+        Thread thread = Kernel.SecurityManager.CreateThread(() => {
+            result = command.Execute(context);
         });
 
         thread.Start();

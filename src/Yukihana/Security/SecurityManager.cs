@@ -49,6 +49,7 @@ public sealed class SecurityManager
             catch (Exception ex)
             {
                 Logger.GlobalLogger.Error(ex.StackTrace ?? "<stacktrace null>");
+                Logger.GlobalLogger.Error(ex.Message);
             }
             finally
             {
@@ -73,6 +74,7 @@ public sealed class SecurityManager
             catch (Exception ex)
             {
                 Logger.GlobalLogger.Error(ex.StackTrace ?? "<stacktrace null>");
+                Logger.GlobalLogger.Error(ex.Message);
             }
             finally
             {
