@@ -4,7 +4,7 @@
 using System.Buffers.Binary;
 using System.Text;
 using acryptohashnet;
-using Cosmos.Kernel.System.Filesystems.Fat;
+using Cosmos.Kernel.System.FileSystem.Fat;
 using Cosmos.Kernel.System.Storage;
 
 namespace Yukihana.Vfs.Probe.Filesystem;

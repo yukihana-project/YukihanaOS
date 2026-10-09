@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
 using System.Diagnostics.CodeAnalysis;
-using Cosmos.Kernel.HAL.Vfs;
+using Cosmos.Kernel.System.FileSystem;
 
 namespace Yukihana.Vfs.Filesystem.InitFs;
 
@@ -84,18 +84,18 @@ internal sealed class InitfsInodeOperations : IInodeOperations
 
         stat = new VfsStat
         {
-            Ino = initfsInode.InodeId,
+            InodeNumber = initfsInode.InodeId,
             Mode = initfsInode.Mode,
-            NLink = 1,
+            LinkCount = 1,
             Uid = (uint)initfsInode.UserId,
             Gid = (uint)initfsInode.GroupId,
-            Rdev = 0,
+            DeviceId = 0,
             Size = (ulong)initfsInode.Size,
-            BlkSize = initfsInode.BlockSize,
+            PreferredBlockSize = initfsInode.BlockSize,
             Blocks = (ulong)(initfsInode.Size / 512 + 1),
-            Atime = initfsInode.Timestamp,
-            Mtime = initfsInode.Timestamp,
-            Ctime = initfsInode.Timestamp
+            AccessTime = initfsInode.Timestamp,
+            ModificationTime = initfsInode.Timestamp,
+            ChangeTime = initfsInode.Timestamp
         };
 
         return true;

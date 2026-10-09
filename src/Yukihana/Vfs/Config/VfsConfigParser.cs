@@ -2,7 +2,7 @@
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
 using System.Text.RegularExpressions;
-using Cosmos.Kernel.HAL.Vfs;
+using Cosmos.Kernel.System.FileSystem;
 using Yukihana.Debug;
 
 namespace Yukihana.Vfs.Config;
