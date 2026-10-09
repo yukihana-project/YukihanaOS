@@ -1,7 +1,7 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
-using Cosmos.Kernel.HAL.Vfs;
+using Cosmos.Kernel.System.FileSystem;
 
 namespace Yukihana.Vfs.Filesystem.InitFs;
 
@@ -21,12 +21,11 @@ internal sealed class InitfsSuperblockOperations : ISuperblockOperations
             Type = 0x696e6974, // "init" ASCII
             BlockSize = 512,
             Blocks = 0,
-            Bfree = 0,
-            Bavail = 0,
-            Files = 0,
-            Ffree = 0,
-            NameMax = 255,
-            Frsize = 512
+            FreeBlocks = 0,
+            AvailableBlocks = 0,
+            FreeInodes = 0,
+            MaxNameLength = 255,
+            FragmentSize = 512
         };
         return true;
     }

@@ -2,14 +2,14 @@
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
 using System.Diagnostics.CodeAnalysis;
-using Cosmos.Kernel.HAL.Interfaces.Devices;
-using Cosmos.Kernel.HAL.Vfs;
+using Cosmos.Kernel.HAL.Devices.Storage;
+using Cosmos.Kernel.System.FileSystem;
 using Yukihana.Core.Compression.Archives;
 using Yukihana.Debug;
 
 namespace Yukihana.Vfs.Filesystem.InitFs;
 
-internal sealed class InitfsFilesystemType : IVfsFilesystemType
+internal sealed class InitfsFilesystemType : IVfsFileSystemType
 {
     private readonly ArchiveImage _archive;
     private readonly IBlockDevice _blockDevice;

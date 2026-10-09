@@ -1,7 +1,7 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
-using Cosmos.Kernel.HAL.Vfs;
+using Cosmos.Kernel.System.FileSystem;
 
 namespace Yukihana.Vfs.Filesystem.InitFs;
 
