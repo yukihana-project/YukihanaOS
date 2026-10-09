@@ -1,9 +1,8 @@
 // Yukihana OS 2026 Yukihana OS Contributors
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
-using Cosmos.Kernel.HAL.Vfs;
+using Cosmos.Kernel.System.FileSystem;
 using Cosmos.Kernel.System.Storage;
-using Cosmos.Kernel.System.Vfs;
 using Yukihana.Debug;
 using Yukihana.Vfs.Probe;
 
@@ -12,11 +11,11 @@ namespace Yukihana.Vfs.Config;
 public sealed class VfsConfigManager
 {
     private readonly List<VfsMountConfig> _configs = [];
-    private readonly Dictionary<string, IVfsFilesystemType> _filesystemTypes = [];
+    private readonly Dictionary<string, IVfsFileSystemType> _filesystemTypes = [];
 
     private readonly Logger _logger = new("vfsman");
 
-    public void RegisterFilesystem(string name, IVfsFilesystemType type)
+    public void RegisterFilesystem(string name, IVfsFileSystemType type)
     {
         ArgumentException.ThrowIfNullOrEmpty(name);
         ArgumentNullException.ThrowIfNull(type);
@@ -35,14 +34,14 @@ public sealed class VfsConfigManager
 
     public IReadOnlyList<VfsMountConfig> GetConfigs() => _configs;
 
-    public bool TryMountAll(out List<VfsManager.VfsMount> mountedFilesystems)
+    public bool TryMountAll(out List<VfsMount> mountedFilesystems)
     {
         _logger.Info("Trying to mount all disks");
         mountedFilesystems = [];
 
         foreach (VfsMountConfig config in _configs)
         {
-            if (TryMount(config, out VfsManager.VfsMount? mount))
+            if (TryMount(config, out VfsMount? mount))
             {
                 _logger.Info($"Mounted '{config.Source}' at '{config.MountPoint}'");
                 mountedFilesystems.Add(mount!);
@@ -56,7 +55,7 @@ public sealed class VfsConfigManager
         return true;
     }
 
-    public bool TryMount(VfsMountConfig config, out VfsManager.VfsMount? mount)
+    public bool TryMount(VfsMountConfig config, out VfsMount? mount)
     {
         mount = null;
 
@@ -69,7 +68,7 @@ public sealed class VfsConfigManager
         }
 
 
-        if (!_filesystemTypes.TryGetValue(config.FilesystemType, out IVfsFilesystemType? fsType))
+        if (!_filesystemTypes.TryGetValue(config.FilesystemType, out IVfsFileSystemType? fsType))
         {
             _logger.Error($"Unable to mount {config.Source} at {config.MountPoint} because could not find '{config.FilesystemType}' fs");
             return false;
@@ -181,9 +180,9 @@ public sealed class VfsConfigManager
         return string.Empty;
     }
 
-    public VfsManager.VfsMount? Mount(string filesystemType, string source, MountFlags flags, string mountPoint)
+    public VfsMount? Mount(string filesystemType, string source, MountFlags flags, string mountPoint)
     {
-        if (VfsManager.TryMount(filesystemType, source, flags, mountPoint, out VfsManager.VfsMount? mount))
+        if (VfsManager.TryMount(filesystemType, source, flags, mountPoint, out VfsMount? mount))
         {
             return mount;
         }

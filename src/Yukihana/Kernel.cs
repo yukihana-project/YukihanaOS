@@ -3,11 +3,10 @@
 
 using System.Data;
 using System.Reflection;
-using Cosmos.Kernel.HAL.Vfs;
+using Cosmos.Kernel.System.FileSystem;
 using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
 using Cosmos.Kernel.System.Storage;
-using Cosmos.Kernel.System.Vfs;
 using Yukihana.Boot;
 using Yukihana.Core.Compression;
 using Yukihana.Core.Compression.Archives;
@@ -145,7 +144,7 @@ public sealed class Kernel : Sys.Kernel
             MemoryBlockDevice ramfsDisk = new("INITFSDISK", 512, 65536);
             InitfsFilesystemType initfsType = new(ramfsDisk, ramfsImage);
 
-            if (VfsManager.RegisterFilesystem("initfs", initfsType))
+            if (VfsManager.RegisterFileSystem("initfs", initfsType))
             {
                 logger.Info("Registered initfs");
             }
