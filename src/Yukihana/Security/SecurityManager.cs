@@ -49,6 +49,32 @@ public sealed class SecurityManager
             catch (Exception ex)
             {
                 Logger.GlobalLogger.Error(ex.StackTrace ?? "<stacktrace null>");
+                Logger.GlobalLogger.Error(ex.Message);
+            }
+            finally
+            {
+                _contexts.TryRemove(Thread.CurrentThread.ManagedThreadId, out _);
+            }
+        });
+
+        return thread;
+    }
+    public Thread CreateThread(ParameterizedThreadStart start, object? param, SecurityContext context)
+    {
+        ArgumentNullException.ThrowIfNull(start);
+
+        Thread thread = new(() =>
+        {
+            _contexts[Thread.CurrentThread.ManagedThreadId] = context;
+
+            try
+            {
+                start(param);
+            }
+            catch (Exception ex)
+            {
+                Logger.GlobalLogger.Error(ex.StackTrace ?? "<stacktrace null>");
+                Logger.GlobalLogger.Error(ex.Message);
             }
             finally
             {
@@ -61,4 +87,7 @@ public sealed class SecurityManager
 
     public Thread CreateThread(ThreadStart start)
         => CreateThread(start, Current);
+
+    public Thread CreateThread(ParameterizedThreadStart start, object? param)
+        => CreateThread(start, param, Current);
 }
