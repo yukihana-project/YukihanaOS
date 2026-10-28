@@ -58,6 +58,17 @@ internal static class SourceGenerator
             targetsFs.Write(Encoding.UTF8.GetBytes(generatedTargets));
         }
 
+        WriteState();
+    }
+
+    /// <summary>
+    /// Writes State.toml with hashes of the current Manifest.toml and Current.toml.
+    /// Does not touch generated sources, so callers must make sure they match first.
+    /// </summary>
+    public static void WriteState()
+    {
+        CurrentConfig current = ConfigManager.CurrentConfig!;
+
         Log.Verbose("Creating State file");
 
         using SHA256 sha256 = SHA256.Create();

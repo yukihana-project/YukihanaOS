@@ -14,13 +14,32 @@ internal static class CheckCommandHandler
     internal static int Handle(ParseResult result)
     {
         bool doFix = result.GetValue(Globals.Args.FixOption);
+        bool regenState = result.GetValue(Globals.Args.RegenerateStateOption);
 
         ConfigManager.LoadConfigs(true);
 
-        if (!File.Exists(Configuration.StateTomlPath) || ConfigManager.StateConfig is null)
+        if (regenState)
+        {
+            return RegenerateState();
+        }
+
+        if (!File.Exists(Configuration.StateTomlPath))
         {
             Log.Fatal("No configuration was generated. Please, generate configuration before checking");
             return 1;
+        }
+
+        if (ConfigManager.StateConfig is null)
+        {
+            Log.Warning("State.toml could not be read");
+
+            if (!doFix)
+            {
+                Log.Information("Run 'check --fix' or 'check --regenerate-state' to rebuild it");
+                return 1;
+            }
+
+            return RegenerateFromCurrent();
         }
 
         StateConfig state = ConfigManager.StateConfig;
@@ -97,15 +116,33 @@ internal static class CheckCommandHandler
             }
 
             // Current.toml is the source of truth here, so regenerate without re-applying the preset
-            if (ValidateHandler.Validate() != 0)
-            {
-                return 1;
-            }
-
-            SourceGenerator.GenerateFromCurrent();
-            return 0;
+            return RegenerateFromCurrent();
         }
 
+        return 0;
+    }
+
+    private static int RegenerateFromCurrent()
+    {
+        if (ValidateHandler.Validate() != 0)
+        {
+            return 1;
+        }
+
+        SourceGenerator.GenerateFromCurrent();
+        return 0;
+    }
+
+    private static int RegenerateState()
+    {
+        if (!SourceGenerator.GeneratedFilesMatchCurrent())
+        {
+            Log.Fatal("The generated files do not match Current.toml. Run 'check --fix' first");
+            return 1;
+        }
+
+        SourceGenerator.WriteState();
+        Log.Information("Regenerated State.toml");
         return 0;
     }
 
