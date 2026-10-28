@@ -231,6 +231,27 @@ select = ["init_ram_fs"]
 - `info <feature>` lists `Depends`, `Selects` and `Required by`.
 - A preset must include everything its features depend on or select. `validate` checks presets, unknown ids, and cycles in `depends`. `check` refuses a `Current.toml` that breaks these rules.
 
+### Options
+
+Options hold a value instead of on or off. Declare them with `[[option]]`:
+
+```toml
+[[option]]
+id = "log_level"
+name = "Log level"
+group = "debug"
+type = "int"   # "string" or "int"
+default = "3"  # always written as text
+```
+
+- `feature set log_level 5` stores the value in `Current.toml`. An empty value means `null`.
+- Setting an option to its default removes the stored value, so the default applies again.
+- `Features.g.cs` gets an `Options` class with one constant per option, typed `int?` or `string?`. It is written only when the manifest declares options.
+- Options are not part of presets. `configure`, `check --fix`, and feature enable or disable keep the stored values.
+- `validate` checks each option's type and default. `check` refuses a stored value that does not fit its type.
+- Option ids share a namespace with feature ids, so each id must be unique.
+- The menu does not edit options yet.
+
 ### Choices
 
 A `[[choice]]` groups features of which exactly one may be enabled, such as a log sink:

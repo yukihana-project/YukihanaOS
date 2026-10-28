@@ -44,7 +44,7 @@ internal static class SourceGenerator
 
         using (FileStream csFs = File.Open(outputPath, FileMode.Create, FileAccess.Write, FileShare.None))
         {
-            string generatedClass = GenerateFeatureConstants(allFeatures, manifest);
+            string generatedClass = GenerateFeatureConstants(allFeatures, manifest, current);
             csFs.Write(Encoding.UTF8.GetBytes(generatedClass));
         }
 
@@ -106,7 +106,7 @@ internal static class SourceGenerator
         ManifestConfig manifest = ConfigManager.ManifestConfig!;
         HashSet<ResolvedNode> allFeatures = ResolveFeatures(manifest, ConfigManager.CurrentConfig!);
 
-        return FileMatches(Configuration.GeneratedCsFilePath, GenerateFeatureConstants(allFeatures, manifest))
+        return FileMatches(Configuration.GeneratedCsFilePath, GenerateFeatureConstants(allFeatures, manifest, ConfigManager.CurrentConfig!))
             && FileMatches(Configuration.GeneratedTargetsFilePath, GenerateTargetsFile(allFeatures, manifest));
     }
 
@@ -117,6 +117,12 @@ internal static class SourceGenerator
 
     private static HashSet<ResolvedNode> ResolveFeatures(ManifestConfig manifest, CurrentConfig current)
     {
+        if (FeatureOptions.FindProblem(manifest, current.Options) is { } problem)
+        {
+            Log.Fatal("Current.toml is invalid: {Problem}", problem);
+            Environment.Exit(1);
+        }
+
         Log.Verbose("Building dependency graph");
         return Flatten(BuildResolvedGraph(manifest, current));
     }
@@ -198,7 +204,7 @@ internal static class SourceGenerator
         return result;
     }
 
-    private static string GenerateFeatureConstants(HashSet<ResolvedNode> graph, ManifestConfig manifest)
+    private static string GenerateFeatureConstants(HashSet<ResolvedNode> graph, ManifestConfig manifest, CurrentConfig current)
     {
         CSharpFileGenerator generator = CSharpFileGenerator.Create();
 
@@ -215,6 +221,17 @@ internal static class SourceGenerator
         foreach (ManifestConfig.FeatureConfig node in manifest.Feature)
         {
             builder.ConstBool(ToPascalCase(node.Id), enabledFeatures.Contains(node.Id));
+        }
+
+        if (manifest.Option.Count > 0)
+        {
+            ClassBuilder options = generator.Class("Options").Public().Static();
+
+            foreach (ManifestConfig.OptionConfig option in manifest.Option)
+            {
+                string? value = FeatureOptions.Effective(option, current.Options);
+                options.ConstLiteral(FeatureOptions.CSharpType(option), ToPascalCase(option.Id), FeatureOptions.Literal(option, value));
+            }
         }
 
         return generator.Generate();

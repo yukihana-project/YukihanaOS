@@ -56,6 +56,7 @@ internal class Program
 
         Globals.Args.EnableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleEnable));
         Globals.Args.DisableSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleDisable));
+        Globals.Args.SetSubcommand.SetAction(Wrap(FeatureCommandHandler.HandleSet));
 
         Globals.Args.InfoCommand.SetAction(Wrap(InfoCommandHandler.Handle));
         // TODO: graph handler (gonna delay)
