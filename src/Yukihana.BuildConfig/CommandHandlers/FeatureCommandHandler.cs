@@ -35,14 +35,32 @@ internal static class FeatureCommandHandler
             return 1;
         }
 
-        List<string> toEnable = [.. FeatureDependencies.WithRequirements(ConfigManager.ManifestConfig!, feature)
+        List<string> toEnable = [.. FeatureDependencies.WithSelected(ConfigManager.ManifestConfig!, feature)
             .Where(id => !ConfigManager.CurrentConfig!.Enabled.Contains(id))];
 
+        // Enabling a choice member switches off its sibling. Selected members never switch, so a clash is refused
+        ManifestConfig.ChoiceConfig? choice = FeatureDependencies.ChoiceOf(ConfigManager.ManifestConfig!, feature);
+        List<string> switchedOff = [.. ConfigManager.CurrentConfig!.Enabled.Where(id => choice is not null && choice.Members.Contains(id) && id != feature)];
+
+        List<string> after = [.. ConfigManager.CurrentConfig!.Enabled.Where(id => !switchedOff.Contains(id)), .. toEnable];
+
+        if (FeatureDependencies.FindProblem(ConfigManager.ManifestConfig!, after) is { } problem)
+        {
+            Log.Fatal("Cannot enable '{Feature}': {Problem}", feature, problem);
+            return 1;
+        }
+
+        ConfigManager.CurrentConfig!.Enabled.RemoveAll(switchedOff.Contains);
         ConfigManager.CurrentConfig!.Enabled.AddRange(toEnable);
+
+        if (switchedOff.Count > 0)
+        {
+            Log.Information("Switched off {Features} (same choice)", string.Join(", ", switchedOff));
+        }
 
         if (toEnable.Count > 1)
         {
-            Log.Information("Also enabled required features: {Features}", string.Join(", ", toEnable.Where(id => id != feature)));
+            Log.Information("Also enabled selected features: {Features}", string.Join(", ", toEnable.Where(id => id != feature)));
         }
 
         SaveAndRegenerate();
@@ -97,6 +115,14 @@ internal static class FeatureCommandHandler
         if (dependants.Count > 0)
         {
             Log.Fatal("Feature '{Feature}' is required by enabled feature(s): {Dependants}", feature, string.Join(", ", dependants));
+            return 1;
+        }
+
+        List<string> remaining = [.. ConfigManager.CurrentConfig.Enabled.Where(id => id != feature)];
+
+        if (FeatureDependencies.FindProblem(ConfigManager.ManifestConfig!, remaining) is { } problem)
+        {
+            Log.Fatal("Cannot disable '{Feature}': {Problem}", feature, problem);
             return 1;
         }
 

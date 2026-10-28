@@ -194,7 +194,7 @@ define = "FEATURE_SERIAL_SINK"
 
 # This list contains sources to exclude when feature is disabled
 exclude = [
-    "Debug/Sinks/ConsoleSink.cs"
+    "Debug/Sinks/SerialSink.cs"
 ]
 ```
 
@@ -209,6 +209,61 @@ enabled = [
     "sinks_serial"
 ]
 ```
+
+### Dependencies
+
+Two fields connect features. Every id must be declared in `Manifest.toml`.
+
+- `depends` is a requirement. Enabling a feature is refused until everything in its `depends` is enabled. Nothing is turned on for you.
+- `select` turns features on. Enabling a feature also enables everything in its `select`, and what those features select in turn.
+
+```toml
+[[feature]]
+id = "sinks_serial"
+name = "Serial Sink"
+group = "debug.logger"
+select = ["init_ram_fs"]
+```
+
+- `feature enable sinks_serial` reports the features it turned on. The menu does the same.
+- `feature disable init_ram_fs` is refused while an enabled feature depends on or selects it, and the message names that feature. The menu refuses too, with a notice.
+- In the menu, each feature shows `requires:` (its `depends`), `selects:` and `required by:` (features that depend on or select it) next to its name.
+- `info <feature>` lists `Depends`, `Selects` and `Required by`.
+- A preset must include everything its features depend on or select. `validate` checks presets, unknown ids, and cycles in `depends`. `check` refuses a `Current.toml` that breaks these rules.
+
+### Choices
+
+A `[[choice]]` groups features of which exactly one may be enabled, such as a log sink:
+
+```toml
+[[choice]]
+id = "log_sink"
+name = "Log sink"
+members = ["sinks_serial", "sinks_console"]
+optional = false
+default = "sinks_serial"
+```
+
+- Enabling a member switches off the other member with `feature enable`, and the menu does the same. The switch is refused if something enabled still needs the member being switched off.
+- A feature selected by an enabled feature does not switch. If another member of its choice is on, the selection is refused.
+- Disabling the only member of a choice is refused unless `optional = true`.
+- A feature can belong to one choice only. `default` must be one of the members. It is the starting member, see [Defaults](#defaults).
+- Presets, `validate` and `check` enforce the rules above. A preset for a manifest with a required choice must pick one member.
+- In the menu, choice members show as `(*)` and `( )`, like radio buttons. Other features show as `[*]` and `[ ]`.
+
+### Defaults
+
+- `enabled_by_default = true` puts a feature in the starting selection. A choice's `default` is its starting member. Each default also brings in what it selects.
+- The menu starts from `Current.toml` when it exists, and from the defaults otherwise. `Save` refuses a selection that breaks a rule, and the menu says why.
+- `validate` checks that the defaults are consistent. A non-optional choice needs exactly one member in the defaults, so give it a `default` or enable one member by default.
+- `info <feature>` shows whether a feature is enabled by default.
+- Generation uses `Current.toml` only. Defaults change what you see in the menu, not what gets built, until you save.
+
+### Checking the configuration
+
+- `check` verifies `State.toml`, `Current.toml` and the generated files. It exits 1 if any of them disagree.
+- `check --fix` regenerates the files from `Current.toml`. It keeps your selection, even when a preset is set.
+- `check --regenerate-state` rewrites `State.toml` only. It is refused unless the generated files already match `Current.toml`, so a stale file can't be recorded as valid.
 
 For configuring your project this is it. Don't forget to include generated `.targets` file in your build (via `.csproj` or `Directory.Build.targets`)
 

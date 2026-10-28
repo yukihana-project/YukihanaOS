@@ -16,6 +16,8 @@ internal sealed class ManifestConfig
 
     public List<FeatureConfig> Feature { get; set; } = [];
 
+    public List<ChoiceConfig> Choice { get; set; } = [];
+
     internal sealed class MetadataConfig
     {
         public string Name { get; set; } = string.Empty;
@@ -29,6 +31,15 @@ internal sealed class ManifestConfig
         public string? Parent { get; set; }
     }
 
+    internal sealed class ChoiceConfig
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public List<string> Members { get; set; } = [];
+        public bool Optional { get; set; }
+        public string? Default { get; set; }
+    }
+
     internal sealed class FeatureConfig
     {
         public string Id { get; set; } = string.Empty;
@@ -38,6 +49,7 @@ internal sealed class ManifestConfig
         public string Define { get; set; } = string.Empty;
         public bool? EnabledByDefault { get; set; }
         public List<string> Depends { get; set; } = [];
+        public List<string> Select { get; set; } = [];
         public List<string> Exclude { get; set; } = [];
     }
 }
@@ -49,6 +61,7 @@ internal sealed class ManifestConfig
 [TomlSerializable(typeof(ManifestConfig))]
 [TomlSerializable(typeof(ManifestConfig.FeatureConfig))]
 [TomlSerializable(typeof(ManifestConfig.GroupConfig))]
+[TomlSerializable(typeof(ManifestConfig.ChoiceConfig))]
 [TomlSerializable(typeof(ManifestConfig.MetadataConfig))]
 internal partial class ManifestConfigContext : TomlSerializerContext
 {
