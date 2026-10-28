@@ -68,6 +68,8 @@ internal static class ConfigureManager
             TomlSerializer.Serialize(fs, newCurrent, CurrentConfigContext.Default);
         }
 
+        // Generator reads the in-memory config, which may still hold the previous selection
+        ConfigManager.CurrentConfig = newCurrent;
         SourceGenerator.GenerateFromCurrent();
 
         return 0;
