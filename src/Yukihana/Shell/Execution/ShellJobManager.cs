@@ -9,13 +9,15 @@ public sealed class ShellJobManager
 {
     private readonly ConcurrentDictionary<int, ShellJob> _jobs = [];
 
+    private int _lastId;
+
     public ShellJob? Foreground { get; set; }
 
     public ShellJob? CreateForeground(string name)
     {
         ShellJob job = new()
         {
-            Id = _jobs.Count + 1,
+            Id = Interlocked.Increment(ref _lastId),
             Name = name,
             State = ShellJobState.Created
         };

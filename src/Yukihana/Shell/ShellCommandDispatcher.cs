@@ -3,29 +3,58 @@
 
 using Yukihana.Security;
 using Yukihana.Shell.Commands;
+using Yukihana.Shell.Exceptions;
 using Yukihana.Shell.Execution;
 
 namespace Yukihana.Shell;
 
 public sealed class ShellCommandDispatcher(ShellCommandRegistry registry)
 {
-    private ShellCommandResult ExecuteInForegroundThread(IShellCommand command, ShellCommandContext context)
+    private static ShellCommandResult Invoke(IShellCommand command, ShellCommandContext context)
     {
-        ShellCommandResult result = new ShellCommandResult.Error("Command threw exception");
+        try
+        {
+            return command.Execute(context);
+        }
+        catch (ShellCommandCancelledException)
+        {
+            return ShellCommandResult.CancelledInstance;
+        }
+        catch (Exception ex)
+        {
+            return new ShellCommandResult.Error(ex.Message);
+        }
+    }
 
-        Thread thread = Kernel.SecurityManager.CreateThread(() => {
-            result = command.Execute(context);
-        });
+    public ShellCommandResult Dispatch(ShellSession session, IReadOnlyList<ShellCommandLine> stages)
+    {
+        ShellCommandResult result = ShellCommandResult.Ok;
+        TextReader input = Console.In;
 
-        thread.Start();
-        thread.Join();
+        for (int i = 0; i < stages.Count; i++)
+        {
+            bool isLast = i == stages.Count - 1;
+            StringWriter buffer = new();
+
+            result = DispatchCommand(session, stages[i], input, isLast ? Console.Out : buffer);
+
+            if (result is not ShellCommandResult.Success)
+            {
+                return result;
+            }
+
+            input = new StringReader(buffer.ToString());
+        }
 
         return result;
     }
 
-    public ShellCommandResult Dispatch(
+    // Public so that sudo can run one command with its own streams
+    public ShellCommandResult DispatchCommand(
         ShellSession session,
-        ShellCommandLine line)
+        ShellCommandLine line,
+        TextReader input,
+        TextWriter output)
     {
         IShellCommand? command = registry.Find(line.Command);
 
@@ -43,18 +72,17 @@ public sealed class ShellCommandDispatcher(ShellCommandRegistry registry)
                 $"{line.Command}: permission denied");
         }
 
-        ShellCancellation cancellation = new();
-
         ShellCommandContext context = new()
         {
             Session = session,
             Arguments = line.Arguments,
-            In = Console.In,
-            Out = Console.Out,
+            In = input,
+            Out = output,
             Err = Console.Error,
-            Cancellation = cancellation
+            Cancellation = new ShellCancellation()
         };
 
-        return command.Flags.HasFlag(ShellCommandFlags.MutatesShellState) ? command.Execute(context) : ExecuteInForegroundThread(command, context);
+        // Runs on the shell thread: console I/O is only routed to a thread bound to a console session
+        return Invoke(command, context);
     }
 }

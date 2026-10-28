@@ -3,7 +3,7 @@
   "qemu": {
     "memory": "2G",
     "machineType": "q35",
-    "cpuModel": "host",
+    "cpuModel": "max",
     "serialMode": "stdio",
     "networkCard": "none",
     "portForwards": [],

@@ -15,6 +15,8 @@ public static class UserManager
         [UserId.Root] = User.Root
     };
 
+    public static IEnumerable<User> All => s_users.Values;
+
     public static void AddUser(string name, CapabilitySet capabilies, GroupId primaryGroupId, bool isEnabled = true)
     {
         UserId uid = new(NextUid++);
@@ -27,6 +29,19 @@ public static class UserManager
             Enabled = isEnabled,
             SupplementaryGroups = []
         });
+    }
+
+    public static void Restore(User user)
+    {
+        s_users[user.Id] = user;
+        NextUid = Math.Max(NextUid, user.Id.Value + 1);
+    }
+
+    public static void Reset()
+    {
+        s_users.Clear();
+        s_users[UserId.Root] = User.Root;
+        NextUid = 1000;
     }
 
     public static void RemoveUser(User user)

@@ -12,6 +12,8 @@ public enum Capability : ulong
     Shutdown = 1 << 1,
     ChangeMode = 1 << 2,
     ChangePermissions = 1 << 3,
+    ManageUsers = 1 << 4,
+    WriteFilesystem = 1 << 5,
 
     All = ulong.MaxValue
 }

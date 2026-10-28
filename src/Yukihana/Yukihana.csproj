@@ -1,5 +1,7 @@
 <Project Sdk="Cosmos.Sdk/3.0.94">
   <PropertyGroup>
+    <CosmosEnableNetwork>false</CosmosEnableNetwork>
+    <CosmosEnableMouse>false</CosmosEnableMouse>
     <AnalysisLevel>latest</AnalysisLevel>
     <EnableNETAnalyzers>true</EnableNETAnalyzers>
 

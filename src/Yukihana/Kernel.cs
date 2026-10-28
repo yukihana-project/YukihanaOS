@@ -20,6 +20,8 @@ using Yukihana.IO.Loaders;
 using Yukihana.IO.Loaders.Optional;
 using Yukihana.Resources;
 using Yukihana.Security;
+using Yukihana.Shell;
+using Yukihana.Shell.Commands;
 using Yukihana.Vfs;
 using Yukihana.Vfs.Config;
 using Yukihana.Vfs.Device;
@@ -165,6 +167,9 @@ public sealed class Kernel : Sys.Kernel
             }
         }
 
+        // Initramfs users are the seed, /etc/passwd on the real root replaces them once that is mounted
+        LoadDatabases(logger, "initramfs");
+
         var fontGroup = new OptionalResourceGroup<FontState>(
             name: "Fonts",
             createState: () => new FontState(),
@@ -204,6 +209,8 @@ public sealed class Kernel : Sys.Kernel
             }
 
             s_vfsMan.TryMountAll(out _);
+
+            LoadDatabases(logger, "/etc");
         }
         else
         {
@@ -223,15 +230,26 @@ public sealed class Kernel : Sys.Kernel
         VfsManager.TryMount("ramfat", "", MountFlags.None, "/tmp", out _);
         */
 
+        CheckEtc(logger);
+
         logger.Info($"Base kernel initialization finished at {DateTime.Now:dd-MM-yyyy HH:mm:ss.fff}.");
 
         LogDispatcher.Sinks.First(r => r.Sink is ConsoleSink).Enabled = false;
 
-        Thread user = SecurityManager.CreateThread(UserThread);
-        Thread.CurrentThread.Priority = ThreadPriority.Lowest;
+        EnsureRootPassword();
 
-        user.Start();
-        user.Join();
+#if DEBUG
+        // Test account for checking non-root login and capability denial, debug builds only
+        if (UserManager.GetUser("guest") is null)
+        {
+            UserManager.AddUser("guest", CapabilitySet.Default, new GroupId(1000));
+            AccountManager.SetPassword(UserManager.GetUser("guest")!, "guest");
+        }
+#endif
+
+        // Runs on the main thread on purpose: console input is routed to the session bound to this thread,
+        // a thread started with new Thread() gets no session and never sees keystrokes
+        UserThread();
 
         while (true)
         {
@@ -240,62 +258,97 @@ public sealed class Kernel : Sys.Kernel
         }
     }
 
+    // Groups first, since users refer to them by gid
+    private static void LoadDatabases(Logger logger, string source)
+    {
+        bool loaded = false;
+
+        if (File.Exists(GroupDatabase.DatabasePath))
+        {
+            GroupDatabase.Load(File.ReadAllText(GroupDatabase.DatabasePath));
+            loaded = true;
+        }
+
+        if (File.Exists(UserDatabase.DatabasePath))
+        {
+            UserDatabase.Load(File.ReadAllText(UserDatabase.DatabasePath));
+            loaded = true;
+        }
+
+        if (loaded)
+        {
+            logger.Info($"Loaded users and groups from {source}");
+        }
+    }
+
+    private static void EnsureRootPassword()
+    {
+        if (AccountManager.Get(UserId.Root) is not null)
+        {
+            return;
+        }
+
+        // Console sink is already off here, so the user is talked to directly
+        Console.WriteLine("No root password is set. Choose one now.");
+        AccountManager.SetPassword(User.Root, PasswordPrompt.ReadNew());
+
+        if (!UserDatabase.Save())
+        {
+            Console.WriteLine("Could not save /etc/passwd, the root password is kept in memory only.");
+        }
+    }
+
+    private static void CheckEtc(Logger logger)
+    {
+        if (!VfsManager.TryStat("/etc", out VfsStat stat))
+        {
+            // Fresh FAT volumes have no /etc, so create it before anything is saved there
+            if (!VfsManager.TryCreateDirectory("/etc", VfsFile.DefaultDirectoryMode))
+            {
+                logger.Error("/etc is missing and could not be created");
+                return;
+            }
+
+            logger.Info("Created /etc");
+        }
+        else if (!stat.IsDirectory)
+        {
+            logger.Error("/etc is not a directory");
+            return;
+        }
+
+        // shortcut: probe by creating a file, VfsMount does not expose mount flags, so read-only is detected by a failed write
+        const string probe = "/etc/.write_probe";
+
+        if (!VfsManager.TryCreateFile(probe, VfsMode.RegularFile | VfsMode.OwnerRead | VfsMode.OwnerWrite))
+        {
+            logger.Error("/etc is read-only or not writable");
+            return;
+        }
+
+        if (!VfsManager.TryUnlink(probe))
+        {
+            logger.Warn("Could not remove /etc probe file");
+        }
+
+        logger.Info("/etc exists and is writable");
+    }
+
     private static void UserThread()
     {
         s_kernelLogger.Trace("UserThread");
 
         Console.WriteLine("\n\nLogging in");
 
-        User? user;
+        ShellCommandDispatcher dispatcher = new(BuiltinCommands.CreateRegistry());
+        LoginService login = new();
 
         while (true)
         {
-            Console.Write("Enter username: ");
-            string? login = Console.ReadLine();
+            User user = login.LoginInteractive();
 
-            if (!string.IsNullOrEmpty(login))
-            {
-                s_kernelLogger.Debug("login stirng is not empty");
-
-                user = UserManager.GetUser(login);
-                if (user is not null)
-                {
-                    s_kernelLogger.Debug("found user!");
-                    break;
-                }
-            }
-
-            s_kernelLogger.Debug("Couldn't find user");
-
-            Console.WriteLine($"Unable to find user '{login}'");
-        }
-
-        Console.Write("Enter password (will not be displayed): ");
-
-        while (true)
-        {
-            string? pass = Console.ReadLineHidden();
-
-            s_kernelLogger.Debug("Got password!");
-
-            if (AccountManager.Authenticate(user.Id, pass ?? ""))
-            {
-                s_kernelLogger.Debug("Passwords match");
-                break;
-            }
-
-            s_kernelLogger.Debug("Passwords do not match");
-
-            Console.WriteLine("Incorrect password. Try again");
-            Console.Write("Enter password (will not be displayed): ");
-        }
-
-        Console.WriteLine("Logged in as root");
-        Console.WriteLine("Looping forever");
-
-        while (true)
-        {
-            Thread.Sleep(10000);
+            SecurityManager.SetCurrent(SecurityContextFactory.CreateUserContext(user));
+            ShellLoop.Run(new ShellSession { User = user }, dispatcher);
         }
     }
 
