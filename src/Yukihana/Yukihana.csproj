@@ -27,6 +27,8 @@
     <!-- Do not compile templates -->
     <Compile Remove="Build/**/*.template.cs"/>
     <None Include="Build/**/*.template.cs"/>
+    <!-- Generated sources are added by Features.g.targets, so the default glob must skip them -->
+    <Compile Remove="Build/Generated/**/*.cs"/>
   </ItemGroup>
 
   <Target Name="GenerateVersionInfo" BeforeTargets="CoreCompile">
