@@ -13,7 +13,7 @@ public sealed class User
 
     public required GroupId PrimaryGroup { get; init; }
 
-    public required ImmutableHashSet<GroupId> SupplementaryGroups { get; init; }
+    public required ImmutableHashSet<GroupId> SupplementaryGroups { get; set; }
 
     public required CapabilitySet DefaultCapabilities { get; init; }
 

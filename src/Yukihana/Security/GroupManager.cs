@@ -9,14 +9,29 @@ public static class GroupManager
 {
     public static uint NextGid { get; set; } = 1000;
 
-    private static readonly ConcurrentDictionary<GroupId, Group> s_groups = new()
+    private static readonly ConcurrentDictionary<GroupId, Group> s_groups = [];
+
+    static GroupManager()
     {
-        [GroupId.Root] = new Group
-        {
-            Id = GroupId.Root,
-            Name = "root"
-        }
-    };
+        Reset();
+    }
+
+    public static IEnumerable<Group> All => s_groups.Values;
+
+    public static void Reset()
+    {
+        s_groups.Clear();
+        Restore(new Group { Id = GroupId.Root, Name = "root" });
+        Restore(new Group { Id = new GroupId(10), Name = "wheel" });
+        Restore(new Group { Id = new GroupId(1000), Name = "users" });
+        NextGid = 1001;
+    }
+
+    public static void Restore(Group group)
+    {
+        s_groups[group.Id] = group;
+        NextGid = Math.Max(NextGid, group.Id.Value + 1);
+    }
 
     public static void AddGroup(string name)
     {

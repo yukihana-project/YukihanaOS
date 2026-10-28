@@ -7,6 +7,8 @@ public readonly record struct CapabilitySet(Capability Value)
 {
     public static readonly CapabilitySet Empty = new(Capability.None);
 
+    public static readonly CapabilitySet Default = new(Capability.Shutdown);
+
     public static readonly CapabilitySet Root = new(Capability.All);
 
     public bool Contains(Capability capability)

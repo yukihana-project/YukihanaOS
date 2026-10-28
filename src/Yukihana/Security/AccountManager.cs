@@ -2,8 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See LICENSE for details.
 
 using System.Collections.Concurrent;
+using System.Security.Cryptography;
 using System.Text;
-using acryptohashnet;
 using Yukihana.Debug;
 
 namespace Yukihana.Security;
@@ -12,64 +12,34 @@ public static class AccountManager
 {
     private static readonly ConcurrentDictionary<UserId, UserAccount> s_accounts = [];
 
-    static AccountManager()
-    {
-        string saltStr = $"0|root|{DateTime.Now.ToBinary()}";
-        SHA256 sha = new();
-        byte[] salt = sha.ComputeHash(Encoding.UTF8.GetBytes(saltStr));
-        byte[] hash = Pbkdf2Sha256.DeriveKey([.. "root"u8], salt);
+    public static void Reset() => s_accounts.Clear();
 
-        s_accounts.TryAdd(UserId.Root,
-            new UserAccount
-            {
-                Locked = false,
-                Password = new PasswordHash(salt, hash, PasswordHashAlgorithm.Pbkdf2Sha256),
-                PasswordExpires = DateTimeOffset.MaxValue,
-                User = User.Root
-            });
+    public static void Restore(User user, PasswordHash password, bool locked)
+    {
+        s_accounts[user.Id] = new UserAccount
+        {
+            User = user,
+            Password = password,
+            Locked = locked
+        };
     }
 
-    public static void Add(
-        User user,
-        string password,
-        bool doLock = false,
-        DateTimeOffset? passwordExpires = null,
-        PasswordHashAlgorithm algorithm = PasswordHashAlgorithm.Pbkdf2Sha256)
+    public static void SetPassword(User user, string password)
     {
-        passwordExpires ??= DateTimeOffset.MaxValue;
+        byte[] salt = RandomNumberGenerator.GetBytes(16);
+        PasswordHash hash = new(
+            salt,
+            Pbkdf2Sha256.DeriveKey(Encoding.UTF8.GetBytes(password), salt),
+            PasswordHashAlgorithm.Pbkdf2Sha256);
 
-        if (!s_accounts.ContainsKey(user.Id))
-        {
-            return;
-        }
-
-        switch (algorithm)
-        {
-            case PasswordHashAlgorithm.Pbkdf2Sha256:
+        s_accounts.AddOrUpdate(
+            user.Id,
+            _ => new UserAccount { User = user, Password = hash },
+            (_, account) =>
             {
-                SHA256 sha = new();
-
-                string saltString = $"{user.Name}|{user.Id.Value}|{DateTime.Now.ToBinary()}";
-
-                byte[] salt = sha.ComputeHash(Encoding.UTF8.GetBytes(saltString));
-
-                s_accounts.TryAdd(user.Id, new UserAccount()
-                {
-                    User = user,
-                    Password = new PasswordHash(
-                        salt,
-                        Pbkdf2Sha256.DeriveKey(
-                            Encoding.UTF8.GetBytes(password),
-                            salt),
-                        algorithm),
-                    Locked = doLock,
-                    PasswordExpires = passwordExpires
-                });
-            }
-            break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(algorithm), algorithm, null);
-        }
+                account.Password = hash;
+                return account;
+            });
     }
 
     public static void Remove(User user) => s_accounts.Remove(user.Id, out _);
