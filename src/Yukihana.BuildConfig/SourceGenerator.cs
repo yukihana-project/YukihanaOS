@@ -79,7 +79,7 @@ internal static class SourceGenerator
             }
         }
 
-        using FileStream stateStream = File.OpenWrite(Configuration.StateTomlPath);
+        using FileStream stateStream = File.Open(Configuration.StateTomlPath, FileMode.Create, FileAccess.Write, FileShare.None);
         TomlSerializer.Serialize(stateStream, ConfigManager.StateConfig, StateConfigContext.Default);
     }
 
