@@ -128,71 +128,10 @@ internal sealed class ManifestTree
         return false;
     }
 
-    public Dictionary<string, bool> GetFeatureStates()
+    public Dictionary<string, bool> GetFeatureStates(IEnumerable<string> enabled)
     {
-
-        var features = EnumerateFeatures(this)
-            .ToDictionary(f => f.Id);
-
-        var result = new Dictionary<string, bool>();
-        var visiting = new HashSet<string>();
-
-        foreach (var feature in features.Values)
-        {
-            Evaluate(feature.Id);
-        }
-
-        return result;
-
-        bool Evaluate(string id)
-        {
-            if (result.TryGetValue(id, out var enabled))
-            {
-                return enabled;
-            }
-
-            if (!features.TryGetValue(id, out var feature))
-            {
-                return false;
-            }
-
-            if (!visiting.Add(id))
-            {
-                throw new InvalidOperationException($"Circular dependency detected involving '{id}'.");
-            }
-
-            enabled = feature.EnabledByDefault ?? false;
-
-            if (enabled)
-            {
-                // A feature is disabled if any dependency is disabled.
-                foreach (var dependency in feature.Depends)
-                {
-                    if (!Evaluate(dependency))
-                    {
-                        enabled = false;
-                        break;
-                    }
-                }
-            }
-
-            if (enabled)
-            {
-                // A feature is disabled if any excluded feature is enabled.
-                foreach (var excluded in feature.Exclude)
-                {
-                    if (Evaluate(excluded))
-                    {
-                        enabled = false;
-                        break;
-                    }
-                }
-            }
-
-            visiting.Remove(id);
-            result[id] = enabled;
-            return enabled;
-        }
+        HashSet<string> on = [.. enabled];
+        return EnumerateFeatures(this).ToDictionary(f => f.Id, f => on.Contains(f.Id));
     }
 
     private static IEnumerable<ManifestConfig.FeatureConfig> EnumerateFeatures(ManifestTree tree)
@@ -228,6 +167,7 @@ internal sealed class GroupNode
     public required ManifestConfig.GroupConfig Group { get; init; }
     public List<GroupNode> Children { get; } = [];
     public List<ManifestConfig.FeatureConfig> Features { get; } = [];
+    public List<ManifestConfig.OptionConfig> Options { get; } = [];
 }
 
 internal static class ManifestTreeBuilder
@@ -271,6 +211,17 @@ internal static class ManifestTreeBuilder
             }
 
             group.Features.Add(feature);
+        }
+
+        foreach (ManifestConfig.OptionConfig option in manifest.Option)
+        {
+            if (!groups.TryGetValue(option.Group, out GroupNode? group))
+            {
+                throw new InvalidOperationException(
+                    $"Option '{option.Id}' references unknown group '{option.Group}'.");
+            }
+
+            group.Options.Add(option);
         }
 
         return tree;

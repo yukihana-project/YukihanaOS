@@ -8,8 +8,10 @@ using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
 using Cosmos.Kernel.System.Storage;
 using Yukihana.Boot;
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Core.Compression;
 using Yukihana.Core.Compression.Archives;
+#endif
 using Yukihana.Core.Extensions.Primitives;
 using Yukihana.Core.Extensions.System;
 using Yukihana.Core.Primitives;
@@ -18,12 +20,18 @@ using Yukihana.Debug.Formatters;
 using Yukihana.Debug.Sinks;
 using Yukihana.IO.Loaders;
 using Yukihana.IO.Loaders.Optional;
+#if FEATURE_CONSOLE_FONT
 using Yukihana.Resources;
+#endif
 using Yukihana.Security;
 using Yukihana.Vfs;
 using Yukihana.Vfs.Config;
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Vfs.Device;
+#endif
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Vfs.Filesystem.InitFs;
+#endif
 using Sys = Cosmos.Kernel.System;
 
 namespace Yukihana;
@@ -185,6 +193,7 @@ public sealed class Kernel : Sys.Kernel
         }
 #endif
 
+#if FEATURE_CONSOLE_FONT
         var fontGroup = new OptionalResourceGroup<FontState>(
             name: "Fonts",
             createState: () => new FontState(),
@@ -206,7 +215,9 @@ public sealed class Kernel : Sys.Kernel
             },
             none: () => { }
         );
+#endif
 
+#if FEATURE_FSTAB
         logger.Info("Reading fstab");
         if (File.Exists("/etc/fstab"))
         {
@@ -232,6 +243,9 @@ public sealed class Kernel : Sys.Kernel
         {
             logger.Error("Unable to locate fstab! No filesystem will be mounted");
         }
+#else
+        logger.Info("fstab feature is off, no filesystems are mounted from it");
+#endif
 
         /*
         logger.Warn("Mounting /tmp as FAT 16, bypassing fstab");

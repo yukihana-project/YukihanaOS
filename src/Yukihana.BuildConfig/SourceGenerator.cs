@@ -16,8 +16,6 @@ namespace Yukihana.BuildConfig;
 
 internal static class SourceGenerator
 {
-    private const string INTERNAL_INCLUDE_SOURCE_TARGET = "_YKConfig_Internal_IncludeGeneratedSource";
-    private const string EXCLUDE_ITEM_TEMPLATE = "_YKConfig_ExcludeFeature_{0}";
     private const string INCLUDE_ITEM_TEMPLATE = "_YKConfig_IncludeFeature_{0}";
 
 
@@ -27,6 +25,9 @@ internal static class SourceGenerator
     public static void GenerateFromCurrent()
     {
         ConfigManager.LoadConfigs();
+
+        // Missing on a fresh checkout until init runs; the archive and sources are written here
+        Directory.CreateDirectory(Configuration.OutputDirectoryPath);
 
         ManifestConfig manifest = ConfigManager.ManifestConfig!;
         CurrentConfig current = ConfigManager.CurrentConfig!;
@@ -44,7 +45,7 @@ internal static class SourceGenerator
 
         using (FileStream csFs = File.Open(outputPath, FileMode.Create, FileAccess.Write, FileShare.None))
         {
-            string generatedClass = GenerateFeatureConstants(allFeatures, manifest);
+            string generatedClass = GenerateFeatureConstants(allFeatures, manifest, current);
             csFs.Write(Encoding.UTF8.GetBytes(generatedClass));
         }
 
@@ -106,7 +107,7 @@ internal static class SourceGenerator
         ManifestConfig manifest = ConfigManager.ManifestConfig!;
         HashSet<ResolvedNode> allFeatures = ResolveFeatures(manifest, ConfigManager.CurrentConfig!);
 
-        return FileMatches(Configuration.GeneratedCsFilePath, GenerateFeatureConstants(allFeatures, manifest))
+        return FileMatches(Configuration.GeneratedCsFilePath, GenerateFeatureConstants(allFeatures, manifest, ConfigManager.CurrentConfig!))
             && FileMatches(Configuration.GeneratedTargetsFilePath, GenerateTargetsFile(allFeatures, manifest));
     }
 
@@ -117,6 +118,12 @@ internal static class SourceGenerator
 
     private static HashSet<ResolvedNode> ResolveFeatures(ManifestConfig manifest, CurrentConfig current)
     {
+        if (FeatureOptions.FindProblem(manifest, current.Options) is { } problem)
+        {
+            Log.Fatal("Current.toml is invalid: {Problem}", problem);
+            Environment.Exit(1);
+        }
+
         Log.Verbose("Building dependency graph");
         return Flatten(BuildResolvedGraph(manifest, current));
     }
@@ -198,7 +205,7 @@ internal static class SourceGenerator
         return result;
     }
 
-    private static string GenerateFeatureConstants(HashSet<ResolvedNode> graph, ManifestConfig manifest)
+    private static string GenerateFeatureConstants(HashSet<ResolvedNode> graph, ManifestConfig manifest, CurrentConfig current)
     {
         CSharpFileGenerator generator = CSharpFileGenerator.Create();
 
@@ -217,6 +224,17 @@ internal static class SourceGenerator
             builder.ConstBool(ToPascalCase(node.Id), enabledFeatures.Contains(node.Id));
         }
 
+        if (manifest.Option.Count > 0)
+        {
+            ClassBuilder options = generator.Class("Options").Public().Static();
+
+            foreach (ManifestConfig.OptionConfig option in manifest.Option)
+            {
+                string? value = FeatureOptions.Effective(option, current.Options);
+                options.ConstLiteral(FeatureOptions.CSharpType(option), ToPascalCase(option.Id), FeatureOptions.Literal(option, value));
+            }
+        }
+
         return generator.Generate();
     }
 
@@ -228,14 +246,18 @@ internal static class SourceGenerator
 
         Log.Verbose("Generating internal targets");
 
-        generator.AddTarget(INTERNAL_INCLUDE_SOURCE_TARGET)
-            .Before(TARGET_BEFORE)
-            .Message("Including Features.g.cs", TargetsFileGenerator.Importance.Low)
-            .IncludeCompile(Configuration.GeneratedCsFilePath);
-
         var enabledIds = graph
             .Select(rn => rn.Id)
             .ToHashSet(StringComparer.Ordinal);
+
+        // Project-relative paths keep the generated file valid when the checkout moves.
+        // Feature sources are opt-in: removed from the default glob, added back only when enabled.
+        // The exact Features.g.cs is removed too, since a wildcard does not reach it
+        string generatedCs = ProjectRelativePath(Configuration.GeneratedCsFilePath);
+
+        generator.AddItemGroup()
+            .ExcludeCompile([generatedCs, .. manifest.Feature.SelectMany(f => f.Sources)])
+            .IncludeCompile([generatedCs, .. manifest.Feature.Where(f => enabledIds.Contains(f.Id)).SelectMany(f => f.Sources)]);
 
         if (enabledIds.Contains(INIT_RAM_FS_FEATURE_ID) && HasInitRamFsSource())
         {
@@ -246,7 +268,6 @@ internal static class SourceGenerator
         }
 
         var included = manifest.Feature.Where(f => enabledIds.Contains(f.Id));
-        var excluded = manifest.Feature.Where(f => !enabledIds.Contains(f.Id));
 
         Log.Verbose("Generating include targets");
 
@@ -254,27 +275,18 @@ internal static class SourceGenerator
         {
             generator.AddTarget(string.Format(INCLUDE_ITEM_TEMPLATE, ToPascalCase(node.Id)))
                 .Before(TARGET_BEFORE)
-                .After(INTERNAL_INCLUDE_SOURCE_TARGET)
                 .Message($"Including feature '{node.Id}'")
                 .DefineConstants(node.Define);
 
             Log.Verbose("Added {FeatureId} feature target as INCLUDED", node.Id);
         }
 
-        Log.Verbose("Generating exclude targets");
-
-        foreach (var node in excluded)
-        {
-            generator.AddTarget(string.Format(EXCLUDE_ITEM_TEMPLATE, ToPascalCase(node.Id)))
-                .Before(TARGET_BEFORE)
-                .After(INTERNAL_INCLUDE_SOURCE_TARGET)
-                .Message($"Excluding feature '{node.Id}'")
-                .ExcludeCompile(node.Exclude);
-
-            Log.Verbose("Added {FeatureId} feature target as EXCLUDED", node.Id);
-        }
-
         return generator.Generate();
+    }
+
+    private static string ProjectRelativePath(string path)
+    {
+        return Path.GetRelativePath(Configuration.BaseDirectory, path).Replace('\\', '/');
     }
 
     private static bool HasInitRamFsSource()

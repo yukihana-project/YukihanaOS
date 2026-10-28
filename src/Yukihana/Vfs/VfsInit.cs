@@ -12,7 +12,9 @@ internal static class VfsInit
 {
     internal static readonly Dictionary<string, IVfsFileSystemType> s_filesystemTypes = new(StringComparer.Ordinal)
     {
+#if FEATURE_FS_FAT
         { "fat", new FatFileSystemType() },
+#endif
     };
 
     public static void InitVfs(Logger logger, VfsConfigManager vfsMan)

@@ -31,6 +31,13 @@ internal sealed class TargetsFileGenerator
         return import;
     }
 
+    public ItemGroupDefinition AddItemGroup()
+    {
+        var group = new ItemGroupDefinition();
+        _elements.Add(group);
+        return group;
+    }
+
     public string Generate()
     {
         var sb = new StringBuilder();
@@ -112,6 +119,50 @@ internal sealed class TargetsFileGenerator
             }
 
             sb.AppendLine(" />");
+        }
+    }
+
+    // Top-level item edits, evaluated with the project. Removes are written before includes
+    public sealed class ItemGroupDefinition : ProjectElement
+    {
+        private readonly List<string> _compileRemoves = [];
+        private readonly List<string> _compileIncludes = [];
+
+        public ItemGroupDefinition ExcludeCompile(IEnumerable<string> items)
+        {
+            _compileRemoves.AddRange(items);
+            return this;
+        }
+
+        public ItemGroupDefinition IncludeCompile(IEnumerable<string> items)
+        {
+            _compileIncludes.AddRange(items);
+            return this;
+        }
+
+        public override void Write(StringBuilder sb, int indent)
+        {
+            WriteIndent(sb, indent);
+            sb.AppendLine("<ItemGroup>");
+
+            foreach (string item in _compileRemoves)
+            {
+                WriteIndent(sb, indent + 1);
+                sb.Append("<Compile Remove=\"");
+                sb.Append(Escape(item));
+                sb.AppendLine("\" />");
+            }
+
+            foreach (string item in _compileIncludes)
+            {
+                WriteIndent(sb, indent + 1);
+                sb.Append("<Compile Include=\"");
+                sb.Append(Escape(item));
+                sb.AppendLine("\" />");
+            }
+
+            WriteIndent(sb, indent);
+            sb.AppendLine("</ItemGroup>");
         }
     }
 

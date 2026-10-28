@@ -157,10 +157,19 @@ internal static class Globals
         //    FeatureArgument
         //};
 
+        public static Argument<string> ValueArgument { get; set; } = new("value");
+
+        public static Command SetSubcommand { get; set; } = new("set", "Set an option value. An empty value means null.")
+        {
+            FeatureArgument,
+            ValueArgument
+        };
+
         public static Command FeatureCommand { get; set; } = new("feature", "Modify single feature.")
         {
             EnableSubcommand,
             DisableSubcommand,
+            SetSubcommand,
             //ToggleSubcommand
         };
 
