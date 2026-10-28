@@ -3,5 +3,6 @@ description = "Debug configuration"
 enabled = [
     "init_ram_fs",
     "sinks_serial",
-    "console_font"
+    "console_font",
+    "archives"
 ]
