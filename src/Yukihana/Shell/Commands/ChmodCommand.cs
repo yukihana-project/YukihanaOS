@@ -67,7 +67,7 @@ public sealed class ChmodCommand : IShellCommand
         return ShellCommandResult.Ok;
     }
 
-    // Three digits at most, so the result never exceeds VfsMode.PermissionMask (0o777)
+    // Three digits only: setuid, setgid and sticky bits are not supported, so the result stays within VfsMode.PermissionMask (0o777)
     private static bool TryParseOctal(string text, out uint value)
     {
         value = 0;

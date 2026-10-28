@@ -45,7 +45,7 @@ public static class FsPermissions
     public static bool StoresPermissions(string path)
     {
         string filesystem = FilesystemOf(path);
-        return !s_modeless.Contains(filesystem);
+        return !s_modeless.Contains(filesystem, StringComparer.OrdinalIgnoreCase);
     }
 
     public static bool Allows(string path, FsAccessMode access)
