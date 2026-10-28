@@ -23,6 +23,7 @@ internal static class SourceGenerator
 
 
     private const string INTERNAL_RAMFS_TARGET = "_YKConfig_Internal_IncludeInitRamFs";
+    private const string INIT_RAM_FS_FEATURE_ID = "init_ram_fs";
 
     public static void GenerateFromCurrent()
     {
@@ -200,14 +201,14 @@ internal static class SourceGenerator
             .Message("Including Features.g.cs", TargetsFileGenerator.Importance.Low)
             .IncludeCompile(Configuration.GeneratedCsFilePath);
 
-        if (Configuration.Features.BuildInitRamFs)
-        {
-            BuildRamFs(generator);
-        }
-
         var enabledIds = graph
             .Select(rn => rn.Id)
             .ToHashSet(StringComparer.Ordinal);
+
+        if (enabledIds.Contains(INIT_RAM_FS_FEATURE_ID))
+        {
+            BuildRamFs(generator);
+        }
 
         var included = manifest.Feature.Where(f => enabledIds.Contains(f.Id));
         var excluded = manifest.Feature.Where(f => !enabledIds.Contains(f.Id));
