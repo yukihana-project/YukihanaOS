@@ -6,5 +6,6 @@ enabled = [
     "console_font",
     "archives",
     "fs_fat",
-    "fs_initfs"
+    "fs_initfs",
+    "fstab"
 ]
