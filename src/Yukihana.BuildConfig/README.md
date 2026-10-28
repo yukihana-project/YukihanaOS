@@ -167,6 +167,7 @@ name = "Logger"
 parent = "debug"
 
 
+# Keep all [[group]] tables together, before the features. Splitting them up fails to load
 # Features require the id field to use snake_case, while everything else does not require it
 # "name" field is display name used in menu configuration
 [[feature]]

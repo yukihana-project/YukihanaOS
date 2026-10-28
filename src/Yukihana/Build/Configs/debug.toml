@@ -4,5 +4,7 @@ enabled = [
     "init_ram_fs",
     "sinks_serial",
     "console_font",
-    "archives"
+    "archives",
+    "fs_fat",
+    "fs_initfs"
 ]

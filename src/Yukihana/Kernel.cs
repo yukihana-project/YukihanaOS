@@ -26,7 +26,9 @@ using Yukihana.Resources;
 using Yukihana.Security;
 using Yukihana.Vfs;
 using Yukihana.Vfs.Config;
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Vfs.Device;
+#endif
 #if FEATURE_INIT_RAM_FS
 using Yukihana.Vfs.Filesystem.InitFs;
 #endif
