@@ -8,8 +8,10 @@ using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
 using Cosmos.Kernel.System.Storage;
 using Yukihana.Boot;
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Core.Compression;
 using Yukihana.Core.Compression.Archives;
+#endif
 using Yukihana.Core.Extensions.Primitives;
 using Yukihana.Core.Extensions.System;
 using Yukihana.Core.Primitives;
@@ -25,7 +27,9 @@ using Yukihana.Security;
 using Yukihana.Vfs;
 using Yukihana.Vfs.Config;
 using Yukihana.Vfs.Device;
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Vfs.Filesystem.InitFs;
+#endif
 using Sys = Cosmos.Kernel.System;
 
 namespace Yukihana;
