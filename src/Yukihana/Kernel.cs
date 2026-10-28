@@ -171,6 +171,18 @@ public sealed class Kernel : Sys.Kernel
             }
         }
 
+#else
+        // TODO: replace with a jump to shell, so the user can mount root themselves
+        logger.Warn("Built without init_ram_fs, mounting first volume as '/'");
+
+        if (s_vfsMan.TryMountFirstVolume("/", MountFlags.ReadOnly, out _))
+        {
+            logger.Info("Mounted first volume as '/'");
+        }
+        else
+        {
+            logger.Error("Unable to mount any volume as '/'");
+        }
 #endif
 
         var fontGroup = new OptionalResourceGroup<FontState>(
