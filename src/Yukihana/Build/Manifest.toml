@@ -17,6 +17,10 @@ id = "debug.logger"
 name = "Logger"
 parent = "debug"
 
+[[group]]
+id = "display"
+name = "Display"
+
 # ------------------
 # Features
 # ------------------
@@ -40,6 +44,21 @@ description = "Enables kernel to log to serial port"
 
 define = "FEATURE_SERIAL_SINK"
 
-exclude = [
+# Files this feature owns. They compile only while the feature is enabled
+sources = [
     "Debug/Sinks/SerialSink.cs"
+]
+
+[[feature]]
+id = "console_font"
+name = "Console Font"
+group = "display"
+
+description = "Loads the console font from the filesystem"
+
+define = "FEATURE_CONSOLE_FONT"
+enabled_by_default = true
+
+sources = [
+    "Resources/Fonts.cs"
 ]

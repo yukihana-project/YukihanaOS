@@ -18,7 +18,9 @@ using Yukihana.Debug.Formatters;
 using Yukihana.Debug.Sinks;
 using Yukihana.IO.Loaders;
 using Yukihana.IO.Loaders.Optional;
+#if FEATURE_CONSOLE_FONT
 using Yukihana.Resources;
+#endif
 using Yukihana.Security;
 using Yukihana.Vfs;
 using Yukihana.Vfs.Config;
@@ -185,6 +187,7 @@ public sealed class Kernel : Sys.Kernel
         }
 #endif
 
+#if FEATURE_CONSOLE_FONT
         var fontGroup = new OptionalResourceGroup<FontState>(
             name: "Fonts",
             createState: () => new FontState(),
@@ -206,6 +209,7 @@ public sealed class Kernel : Sys.Kernel
             },
             none: () => { }
         );
+#endif
 
         logger.Info("Reading fstab");
         if (File.Exists("/etc/fstab"))
