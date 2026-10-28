@@ -106,6 +106,7 @@ internal static class ConfigManager
         CurrentConfig = new()
         {
             Enabled = [.. features.Where(kv => kv.Value).Select(kv => kv.Key)],
+            Options = CurrentConfig?.Options
         };
 
         try

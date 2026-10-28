@@ -18,6 +18,8 @@ internal sealed class ManifestConfig
 
     public List<ChoiceConfig> Choice { get; set; } = [];
 
+    public List<OptionConfig> Option { get; set; } = [];
+
     internal sealed class MetadataConfig
     {
         public string Name { get; set; } = string.Empty;
@@ -29,6 +31,20 @@ internal sealed class ManifestConfig
         public string Id { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string? Parent { get; set; }
+    }
+
+    internal sealed class OptionConfig
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Group { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+
+        // "string" or "int"
+        public string Type { get; set; } = "string";
+
+        // Stored as text, so it is written as a TOML string
+        public string? Default { get; set; }
     }
 
     internal sealed class ChoiceConfig
@@ -62,6 +78,7 @@ internal sealed class ManifestConfig
 [TomlSerializable(typeof(ManifestConfig.FeatureConfig))]
 [TomlSerializable(typeof(ManifestConfig.GroupConfig))]
 [TomlSerializable(typeof(ManifestConfig.ChoiceConfig))]
+[TomlSerializable(typeof(ManifestConfig.OptionConfig))]
 [TomlSerializable(typeof(ManifestConfig.MetadataConfig))]
 internal partial class ManifestConfigContext : TomlSerializerContext
 {

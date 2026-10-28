@@ -50,10 +50,17 @@ internal static class ConfigureManager
             }
         }
 
+        // Option values are kept across presets
+        if (File.Exists(Configuration.CurrentTomlPath))
+        {
+            ConfigManager.LoadConfigs(true);
+        }
+
         CurrentConfig newCurrent = new()
         {
             Enabled = [.. ConfigManager.ManifestConfig!.Feature.Where(f => preset.Enabled.Contains(f.Id)).Select(f => f.Id)],
-            Config = presetName
+            Config = presetName,
+            Options = ConfigManager.CurrentConfig?.Options
         };
 
         using (FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.Write, FileShare.None))

@@ -115,6 +115,7 @@ internal sealed class ClassBuilder
 {
     private readonly List<string> _comments = [];
     private readonly List<ConstBoolBuilder> _consts = [];
+    private readonly List<(string Type, string Name, string Literal)> _literals = [];
 
     private string _visibility = "internal";
 
@@ -169,6 +170,12 @@ internal sealed class ClassBuilder
     public ClassBuilder Abstract()
     {
         _abstract = true;
+        return this;
+    }
+
+    public ClassBuilder ConstLiteral(string type, string name, string literal)
+    {
+        _literals.Add((type, name, literal));
         return this;
     }
 
@@ -231,6 +238,12 @@ internal sealed class ClassBuilder
         foreach (var field in _consts)
         {
             field.Write(writer);
+        }
+
+        foreach ((string type, string name, string literal) in _literals)
+        {
+            writer.Line($"public const {type} {name} = {literal};");
+            writer.Line();
         }
 
         writer.Unindent();

@@ -59,6 +59,29 @@ internal static class ValidateHandler
             }
         }
 
+        string[] allIds = [.. manifestFeatureIds, .. ConfigManager.ManifestConfig.Option.Select(o => o.Id)];
+        string? duplicate = allIds.GroupBy(i => i).FirstOrDefault(g => g.Count() > 1)?.Key;
+        if (duplicate is not null)
+        {
+            Log.Error("Id '{Id}' is used by more than one feature or option", duplicate);
+            return 1;
+        }
+
+        foreach (ManifestConfig.OptionConfig option in ConfigManager.ManifestConfig.Option)
+        {
+            if (option.Type is not ("string" or "int"))
+            {
+                Log.Error("Option '{Option}' has unknown type '{Type}'", option.Id, option.Type);
+                return 1;
+            }
+
+            if (option.Default is not null && FeatureOptions.CheckValue(option, option.Default) is { } problem)
+            {
+                Log.Error("Option '{Option}' default: {Problem}", option.Id, problem);
+                return 1;
+            }
+        }
+
         try
         {
             new DependencyGraph().BuildDependencyGraph([.. ConfigManager.ManifestConfig.Feature]);
