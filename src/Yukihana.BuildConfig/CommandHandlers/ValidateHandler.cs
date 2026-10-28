@@ -30,6 +30,32 @@ internal static class ValidateHandler
             }
         }
 
+        // Sources are relative to the kernel project, which is where the tool lives
+        foreach (ManifestConfig.FeatureConfig feature in ConfigManager.ManifestConfig.Feature)
+        {
+            if (feature.Exclude is { Count: > 0 })
+            {
+                Log.Error("Feature '{Feature}' uses 'exclude', which was replaced by 'sources'. List the files the feature owns instead", feature.Id);
+                return 1;
+            }
+
+            foreach (string source in feature.Sources)
+            {
+                if (!File.Exists(Path.Combine(Configuration.BaseDirectory, source)))
+                {
+                    Log.Error("Feature '{Feature}' lists source '{Source}', which does not exist", feature.Id, source);
+                    return 1;
+                }
+            }
+        }
+
+        string? sharedSource = ConfigManager.ManifestConfig.Feature.SelectMany(f => f.Sources).GroupBy(s => s).FirstOrDefault(g => g.Count() > 1)?.Key;
+        if (sharedSource is not null)
+        {
+            Log.Error("Source '{Source}' belongs to more than one feature", sharedSource);
+            return 1;
+        }
+
         foreach (ManifestConfig.ChoiceConfig choice in ConfigManager.ManifestConfig.Choice)
         {
             if (choice.Members.Count == 0)
@@ -69,6 +95,12 @@ internal static class ValidateHandler
 
         foreach (ManifestConfig.OptionConfig option in ConfigManager.ManifestConfig.Option)
         {
+            if (!ConfigManager.ManifestConfig.Group.Any(g => g.Id == option.Group))
+            {
+                Log.Error("Option '{Option}' references unknown group '{Group}'", option.Id, option.Group);
+                return 1;
+            }
+
             if (option.Type is not ("string" or "int"))
             {
                 Log.Error("Option '{Option}' has unknown type '{Type}'", option.Id, option.Type);

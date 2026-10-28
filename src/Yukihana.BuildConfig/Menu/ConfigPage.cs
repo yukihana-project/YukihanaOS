@@ -29,16 +29,17 @@ internal static class ConfigPage
 
         ManifestTree tree = ManifestTreeBuilder.Build(manifest);
         Dictionary<string, bool> featureStates = tree.GetFeatureStates(start);
+        Dictionary<string, string?> optionValues = manifest.Option.ToDictionary(o => o.Id, o => FeatureOptions.Effective(o, ConfigManager.CurrentConfig?.Options));
 
         GroupNode? node = null;
 
         while (true)
         {
-            node = Process(tree, node, featureStates); ;
+            node = Process(tree, node, featureStates, optionValues); ;
         }
     }
 
-    private static GroupNode? Process(ManifestTree tree, GroupNode? current, Dictionary<string, bool> featureStates)
+    private static GroupNode? Process(ManifestTree tree, GroupNode? current, Dictionary<string, bool> featureStates, Dictionary<string, string?> optionValues)
     {
         AnsiConsole.Clear();
 
@@ -48,6 +49,7 @@ internal static class ConfigPage
 
         List<GroupNode> groups = tree.RootGroups;
         List<ManifestConfig.FeatureConfig> features = [];
+        List<ManifestConfig.OptionConfig> options = [];
 
         if (current is not null)
         {
@@ -56,6 +58,7 @@ internal static class ConfigPage
 
             groups = group!.Children;
             features = group.Features;
+            options = group.Options;
         }
 
         DrawHeader(pathNames);
@@ -69,6 +72,14 @@ internal static class ConfigPage
 
         string[] featureNames = [.. featureLabels.Keys];
 
+        Dictionary<string, ManifestConfig.OptionConfig> optionLabels = [];
+        foreach (ManifestConfig.OptionConfig opt in options)
+        {
+            optionLabels[OptionLabel(opt, optionValues[opt.Id])] = opt;
+        }
+
+        string[] optionNames = [.. optionLabels.Keys];
+
         const string Back = "[gray]<Back>[/]";
         const string Save = "[gray]<Save>[/]";
         const string Presets = "[gray]<Presets>[/]";
@@ -79,7 +90,7 @@ internal static class ConfigPage
             .EnableSearch()
             .PageSize(15)
             .MoreChoicesText("[gray](More items available)[/]")
-            .AddChoiceGroup("Config", [.. groupNames, .. featureNames])
+            .AddChoiceGroup("Config", [.. groupNames, .. featureNames, .. optionNames])
             .AddChoiceGroup("Commands", [Back, Save, Presets, Exit]));
 
         switch (selected)
@@ -100,7 +111,19 @@ internal static class ConfigPage
                     break;
                 }
 
-                ConfigManager.UpdateCurrentConfig(featureStates);
+                // Same rule as 'feature set': a value equal to the default is stored as absence
+                Dictionary<string, string> stored = [];
+                foreach (ManifestConfig.OptionConfig opt in ConfigManager.ManifestConfig!.Option)
+                {
+                    string? value = optionValues[opt.Id];
+
+                    if (value != opt.Default)
+                    {
+                        stored[opt.Id] = value ?? string.Empty;
+                    }
+                }
+
+                ConfigManager.UpdateCurrentConfig(featureStates, stored);
                 SourceGenerator.GenerateFromCurrent();
                 AnsiConsole.Clear();
                 Log.Information("Saved Current.toml");
@@ -136,6 +159,12 @@ internal static class ConfigPage
                 node = group.Children.First(c => c.Group.Name == toEnter);
             }
             return node;
+        }
+
+        if (optionLabels.TryGetValue(selected, out ManifestConfig.OptionConfig? selectedOption))
+        {
+            PromptOption(selectedOption, optionValues);
+            return current;
         }
 
         if (featureLabels.TryGetValue(selected, out ManifestConfig.FeatureConfig? selectedFeature))
@@ -237,6 +266,38 @@ internal static class ConfigPage
         {
             s_notice = $"[yellow]{string.Join(". ", notes)}[/]";
         }
+    }
+
+    // Green when at the default, yellow when changed, grey for null
+    private static string OptionLabel(ManifestConfig.OptionConfig option, string? value)
+    {
+        string name = Markup.Escape(option.Name);
+
+        if (value is null)
+        {
+            return $"{name}: [gray]null[/]";
+        }
+
+        string shown = Markup.Escape(value);
+
+        return value == option.Default
+            ? $"{name}: [green]{shown}[/]"
+            : $"{name}: [yellow]{shown}[/] [gray](default {Markup.Escape(option.Default ?? "null")})[/]";
+    }
+
+    private static void PromptOption(ManifestConfig.OptionConfig option, Dictionary<string, string?> optionValues)
+    {
+        string? value = optionValues[option.Id];
+        string shown = value is null ? "[gray]null[/]" : $"[aqua]{Markup.Escape(value)}[/]";
+
+        string input = AnsiConsole.Prompt(new TextPrompt<string>(
+                $"{Markup.Escape(option.Name)} [gray]({option.Type}, default {Markup.Escape(option.Default ?? "null")}, empty for null)[/], current {shown}:")
+            .AllowEmpty()
+            .Validate(value => FeatureOptions.CheckValue(option, value) is { } problem
+                ? ValidationResult.Error(problem)
+                : ValidationResult.Success()));
+
+        optionValues[option.Id] = input.Length == 0 ? null : input;
     }
 
     private static string NamesOf(ManifestConfig manifest, IEnumerable<string> ids)

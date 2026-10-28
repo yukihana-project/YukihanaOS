@@ -85,6 +85,10 @@ internal sealed class CSharpFileGenerator
             sb.Line();
         }
 
+        // The project is not nullable by default, and "?" on reference types is an error without this
+        sb.Line("#nullable enable");
+        sb.Line();
+
         foreach (string? u in _usings.OrderBy(x => x))
         {
             sb.Line($"using {u};");
