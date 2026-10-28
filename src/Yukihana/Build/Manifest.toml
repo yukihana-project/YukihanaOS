@@ -87,6 +87,22 @@ sources = [
     "Vfs/Device/MemoryBlockDevice.cs"
 ]
 
+[[feature]]
+id = "fstab"
+name = "fstab"
+group = "filesystem"
+
+description = "Mounts the filesystems listed in /etc/fstab"
+
+define = "FEATURE_FSTAB"
+
+sources = [
+    "Vfs/Config/VfsConfigParser.cs",
+    "Vfs/Config/VfsMountConfig.cs",
+    "Vfs/Config/SourceType.cs",
+    "Vfs/Config/VfsConfigManager.Fstab.cs"
+]
+
 
 # ------------------
 # Features

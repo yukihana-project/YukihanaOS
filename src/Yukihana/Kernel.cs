@@ -217,6 +217,7 @@ public sealed class Kernel : Sys.Kernel
         );
 #endif
 
+#if FEATURE_FSTAB
         logger.Info("Reading fstab");
         if (File.Exists("/etc/fstab"))
         {
@@ -242,6 +243,9 @@ public sealed class Kernel : Sys.Kernel
         {
             logger.Error("Unable to locate fstab! No filesystem will be mounted");
         }
+#else
+        logger.Info("fstab feature is off, no filesystems are mounted from it");
+#endif
 
         /*
         logger.Warn("Mounting /tmp as FAT 16, bypassing fstab");
