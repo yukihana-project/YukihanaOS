@@ -37,11 +37,23 @@ internal static class FeatureCommandHandler
 
         ConfigManager.CurrentConfig!.Enabled.Add(feature);
 
-        using FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
-        TomlSerializer.Serialize(fs, ConfigManager.CurrentConfig, CurrentConfigContext.Default);
+        SaveAndRegenerate();
 
         return 0;
     }
+    private static void SaveAndRegenerate()
+    {
+        // Feature list no longer matches the preset, so the preset name is dropped
+        ConfigManager.CurrentConfig!.Config = null;
+
+        using (FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.Write, FileShare.None))
+        {
+            TomlSerializer.Serialize(fs, ConfigManager.CurrentConfig, CurrentConfigContext.Default);
+        }
+
+        SourceGenerator.GenerateFromCurrent();
+    }
+
     public static int HandleDisable(ParseResult result)
     {
         string? feature = result.GetValue(Globals.Args.FeatureArgument);
@@ -74,8 +86,7 @@ internal static class FeatureCommandHandler
 
         ConfigManager.CurrentConfig!.Enabled.Remove(feature);
 
-        using FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
-        TomlSerializer.Serialize(fs, ConfigManager.CurrentConfig, CurrentConfigContext.Default);
+        SaveAndRegenerate();
 
         return 0;
     }

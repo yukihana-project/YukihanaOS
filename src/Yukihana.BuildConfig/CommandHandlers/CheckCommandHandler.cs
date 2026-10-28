@@ -115,6 +115,9 @@ internal static class CheckCommandHandler
             {
                 TomlSerializer.Serialize(fs, newCurrent, CurrentConfigContext.Default);
             }
+
+            // Generator reads the in-memory config, so it has to match what was just written
+            ConfigManager.CurrentConfig = newCurrent;
         }
         else
         {
