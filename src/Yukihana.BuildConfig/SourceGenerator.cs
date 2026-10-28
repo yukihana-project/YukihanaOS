@@ -16,7 +16,6 @@ namespace Yukihana.BuildConfig;
 
 internal static class SourceGenerator
 {
-    private const string INTERNAL_EXCLUDE_TARGET = "_YKConfig_Internal_ExcludeGeneratedFiles";
     private const string INTERNAL_INCLUDE_SOURCE_TARGET = "_YKConfig_Internal_IncludeGeneratedSource";
     private const string EXCLUDE_ITEM_TEMPLATE = "_YKConfig_ExcludeFeature_{0}";
     private const string INCLUDE_ITEM_TEMPLATE = "_YKConfig_IncludeFeature_{0}";
@@ -190,14 +189,8 @@ internal static class SourceGenerator
 
         Log.Verbose("Generating internal targets");
 
-        generator.AddTarget(INTERNAL_EXCLUDE_TARGET)
-            .Before(TARGET_BEFORE)
-            .Message("Excluding Generated directory", TargetsFileGenerator.Importance.Low)
-            .ExcludeCompile(Path.Join(Configuration.OutputDirectoryPath, "*"));
-
         generator.AddTarget(INTERNAL_INCLUDE_SOURCE_TARGET)
             .Before(TARGET_BEFORE)
-            .After(INTERNAL_EXCLUDE_TARGET)
             .Message("Including Features.g.cs", TargetsFileGenerator.Importance.Low)
             .IncludeCompile(Configuration.GeneratedCsFilePath);
 

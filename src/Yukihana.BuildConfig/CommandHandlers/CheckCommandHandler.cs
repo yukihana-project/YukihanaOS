@@ -37,6 +37,11 @@ internal static class CheckCommandHandler
 
             Log.Information("Updating current configuration");
 
+            if (ValidateHandler.Validate() != 0)
+            {
+                return 1;
+            }
+
             SourceGenerator.GenerateFromCurrent();
             return 0;
         }

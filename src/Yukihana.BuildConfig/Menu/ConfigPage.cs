@@ -10,6 +10,9 @@ namespace Yukihana.BuildConfig.Menu;
 // imma cry T_T
 internal static class ConfigPage
 {
+    // Shown on the next redraw, since the prompt clears the screen each time
+    private static string? s_notice;
+
     public static void Show()
     {
         ConfigManager.LoadConfigs(false);
@@ -48,9 +51,13 @@ internal static class ConfigPage
         DrawHeader(pathNames);
 
         string[] groupNames = [.. groups.Select(g => "    " + g.Group.Name)];
-        string[] featureNames = [.. features
-            .Where(f => featureStates.ContainsKey(f.Id))
-            .Select(f => featureStates[f.Id] ? "[[*]] " + f.Name : "[[ ]] " + f.Name)];
+        Dictionary<string, ManifestConfig.FeatureConfig> featureLabels = [];
+        foreach (ManifestConfig.FeatureConfig feat in features.Where(f => featureStates.ContainsKey(f.Id)))
+        {
+            featureLabels[FeatureLabel(ConfigManager.ManifestConfig!, feat, featureStates)] = feat;
+        }
+
+        string[] featureNames = [.. featureLabels.Keys];
 
         const string Back = "[gray]<Back>[/]";
         const string Save = "[gray]<Save>[/]";
@@ -115,19 +122,76 @@ internal static class ConfigPage
             return node;
         }
 
-        if (featureNames.Contains(selected))
+        if (featureLabels.TryGetValue(selected, out ManifestConfig.FeatureConfig? selectedFeature))
         {
-            string featName = new([.. featureNames[featureNames.IndexOf(selected)].Skip(6)]);
-            ManifestConfig.FeatureConfig feat = features.First(f => f.Name == featName);
-            featureStates[feat.Id] = !featureStates[feat.Id];
+            ToggleFeature(ConfigManager.ManifestConfig!, selectedFeature.Id, featureStates);
             return current;
         }
         return current;
+    }
+
+    private static string FeatureLabel(ManifestConfig manifest, ManifestConfig.FeatureConfig feature, Dictionary<string, bool> featureStates)
+    {
+        string label = (featureStates[feature.Id] ? "[[*]] " : "[[ ]] ") + feature.Name;
+
+        if (feature.Depends.Count > 0)
+        {
+            label += $" [gray](requires: {NamesOf(manifest, feature.Depends)})[/]";
+        }
+
+        List<string> requiredBy = FeatureDependencies.RequiredBy(manifest, feature.Id);
+        if (requiredBy.Count > 0)
+        {
+            label += $" [gray](required by: {NamesOf(manifest, requiredBy)})[/]";
+        }
+
+        return label;
+    }
+
+    private static void ToggleFeature(ManifestConfig manifest, string id, Dictionary<string, bool> featureStates)
+    {
+        if (featureStates[id])
+        {
+            List<string> dependants = FeatureDependencies.EnabledDependants(manifest, id, featureStates.Where(kv => kv.Value).Select(kv => kv.Key));
+
+            if (dependants.Count > 0)
+            {
+                s_notice = $"[yellow]Can't disable {NamesOf(manifest, [id])}: required by {NamesOf(manifest, dependants)}[/]";
+                return;
+            }
+
+            featureStates[id] = false;
+            return;
+        }
+
+        List<string> toEnable = [.. FeatureDependencies.WithRequirements(manifest, id).Where(d => !featureStates[d])];
+
+        foreach (string enable in toEnable)
+        {
+            featureStates[enable] = true;
+        }
+
+        List<string> required = [.. toEnable.Where(d => d != id)];
+        if (required.Count > 0)
+        {
+            s_notice = $"[yellow]Also enabled {NamesOf(manifest, required)} (required by {NamesOf(manifest, [id])})[/]";
+        }
+    }
+
+    private static string NamesOf(ManifestConfig manifest, IEnumerable<string> ids)
+    {
+        return string.Join(", ", ids.Select(id => manifest.Feature.First(f => f.Id == id).Name));
     }
 
     private static void DrawHeader(string path)
     {
         AnsiConsole.MarkupLine("[aqua]Yukihana YKConfig[/]\n\n");
         AnsiConsole.MarkupLine("[gray]{0}[/]", path);
+
+        if (s_notice is not null)
+        {
+            AnsiConsole.MarkupLine(s_notice);
+            s_notice = null;
+        }
     }
 }

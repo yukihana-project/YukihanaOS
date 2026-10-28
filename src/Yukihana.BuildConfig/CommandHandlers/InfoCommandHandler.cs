@@ -43,6 +43,13 @@ internal static class InfoCommandHandler
             Log.Information("  {FeatureDepends}", depends);
         }
 
+        Log.Information("Required by:");
+
+        foreach (string dependant in FeatureDependencies.RequiredBy(ConfigManager.ManifestConfig!, cfg.Id))
+        {
+            Log.Information("  {FeatureDependant}", dependant);
+        }
+
         Log.Information("Excluded sources:");
 
         foreach (string exclude in cfg.Exclude)

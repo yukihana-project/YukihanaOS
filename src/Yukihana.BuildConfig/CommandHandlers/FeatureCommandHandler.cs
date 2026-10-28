@@ -35,7 +35,15 @@ internal static class FeatureCommandHandler
             return 1;
         }
 
-        ConfigManager.CurrentConfig!.Enabled.Add(feature);
+        List<string> toEnable = [.. FeatureDependencies.WithRequirements(ConfigManager.ManifestConfig!, feature)
+            .Where(id => !ConfigManager.CurrentConfig!.Enabled.Contains(id))];
+
+        ConfigManager.CurrentConfig!.Enabled.AddRange(toEnable);
+
+        if (toEnable.Count > 1)
+        {
+            Log.Information("Also enabled required features: {Features}", string.Join(", ", toEnable.Where(id => id != feature)));
+        }
 
         SaveAndRegenerate();
 
@@ -82,6 +90,14 @@ internal static class FeatureCommandHandler
         if (!ConfigManager.CurrentConfig.Enabled.Contains(feature))
         {
             return 0;
+        }
+
+        List<string> dependants = FeatureDependencies.EnabledDependants(ConfigManager.ManifestConfig!, feature, ConfigManager.CurrentConfig.Enabled!);
+
+        if (dependants.Count > 0)
+        {
+            Log.Fatal("Feature '{Feature}' is required by enabled feature(s): {Dependants}", feature, string.Join(", ", dependants));
+            return 1;
         }
 
         ConfigManager.CurrentConfig!.Enabled.Remove(feature);
