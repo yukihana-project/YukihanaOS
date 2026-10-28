@@ -87,6 +87,25 @@ internal static class CheckCommandHandler
             return Regenerate();
         }
 
+        if (!SourceGenerator.GeneratedFilesMatchCurrent())
+        {
+            Log.Warning("The generated files do not match Current.toml");
+
+            if (!doFix)
+            {
+                return 1;
+            }
+
+            // Current.toml is the source of truth here, so regenerate without re-applying the preset
+            if (ValidateHandler.Validate() != 0)
+            {
+                return 1;
+            }
+
+            SourceGenerator.GenerateFromCurrent();
+            return 0;
+        }
+
         return 0;
     }
 

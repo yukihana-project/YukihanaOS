@@ -31,10 +31,12 @@ internal static class SourceGenerator
         ManifestConfig manifest = ConfigManager.ManifestConfig!;
         CurrentConfig current = ConfigManager.CurrentConfig!;
 
-        Log.Verbose("Building dependency graph");
+        HashSet<ResolvedNode> allFeatures = ResolveFeatures(manifest, current);
 
-        List<ResolvedNode> graph = BuildResolvedGraph(manifest, current);
-        HashSet<ResolvedNode> allFeatures = Flatten(graph);
+        if (allFeatures.Any(n => n.Id == INIT_RAM_FS_FEATURE_ID))
+        {
+            BuildRamFs();
+        }
 
         string outputPath = Configuration.GeneratedCsFilePath;
 
@@ -80,6 +82,32 @@ internal static class SourceGenerator
 
         using FileStream stateStream = File.Open(Configuration.StateTomlPath, FileMode.Create, FileAccess.Write, FileShare.None);
         TomlSerializer.Serialize(stateStream, ConfigManager.StateConfig, StateConfigContext.Default);
+    }
+
+    /// <summary>
+    /// True when Features.g.cs and Features.g.targets already hold what Current.toml would generate.
+    /// Writes nothing.
+    /// </summary>
+    public static bool GeneratedFilesMatchCurrent()
+    {
+        ConfigManager.LoadConfigs();
+
+        ManifestConfig manifest = ConfigManager.ManifestConfig!;
+        HashSet<ResolvedNode> allFeatures = ResolveFeatures(manifest, ConfigManager.CurrentConfig!);
+
+        return FileMatches(Configuration.GeneratedCsFilePath, GenerateFeatureConstants(allFeatures, manifest))
+            && FileMatches(Configuration.GeneratedTargetsFilePath, GenerateTargetsFile(allFeatures, manifest));
+    }
+
+    private static bool FileMatches(string path, string expected)
+    {
+        return File.Exists(path) && File.ReadAllText(path) == expected;
+    }
+
+    private static HashSet<ResolvedNode> ResolveFeatures(ManifestConfig manifest, CurrentConfig current)
+    {
+        Log.Verbose("Building dependency graph");
+        return Flatten(BuildResolvedGraph(manifest, current));
     }
 
     private static List<ResolvedNode> BuildResolvedGraph(
@@ -198,9 +226,12 @@ internal static class SourceGenerator
             .Select(rn => rn.Id)
             .ToHashSet(StringComparer.Ordinal);
 
-        if (enabledIds.Contains(INIT_RAM_FS_FEATURE_ID))
+        if (enabledIds.Contains(INIT_RAM_FS_FEATURE_ID) && HasInitRamFsSource())
         {
-            BuildRamFs(generator);
+            generator.AddTarget(INTERNAL_RAMFS_TARGET)
+                .Before("PrepareForBuild")
+                .Message("Including initramfs.cpio.gz")
+                .EmbedResource(Configuration.GeneratedInitRamFsPath, Configuration.InitRamFsLogicalName, $"Exists('{Configuration.GeneratedInitRamFsPath}')");
         }
 
         var included = manifest.Feature.Where(f => enabledIds.Contains(f.Id));
@@ -235,17 +266,18 @@ internal static class SourceGenerator
         return generator.Generate();
     }
 
-    private static void BuildRamFs(TargetsFileGenerator generator)
+    private static bool HasInitRamFsSource()
     {
-        if (!Directory.Exists(Configuration.DefaultInitRamFsPath) && !Directory.Exists(Configuration.LocalInitRamFsPath))
+        return Directory.Exists(Configuration.DefaultInitRamFsPath) || Directory.Exists(Configuration.LocalInitRamFsPath);
+    }
+
+    private static void BuildRamFs()
+    {
+        if (!HasInitRamFsSource())
         {
             Log.Warning("Unable to create initramfs as no directories exists. Run init command.");
             return;
         }
-
-        var target = generator.AddTarget(INTERNAL_RAMFS_TARGET)
-                        .Before("PrepareForBuild")
-                        .Message("Including initramfs.cpio.gz");
 
         // Get directory to build
 
@@ -308,9 +340,5 @@ internal static class SourceGenerator
         {
             File.Delete(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio"));
         }
-
-        // Embed file
-
-        target.EmbedResource(Configuration.GeneratedInitRamFsPath, Configuration.InitRamFsLogicalName, $"Exists('{Configuration.GeneratedInitRamFsPath}')");
     }
 }
