@@ -4,7 +4,7 @@
 
 ## About
 
-**YKConfig** aims to provide versatile feature configuration of "features" inside a C# project. It allows you to exclude sources of disabled features, use preprocessor `#define` and use normal C# if statements through a generated static class.
+**YKConfig** aims to provide versatile feature configuration of "features" inside a C# project. It allows you to compile sources only when their feature is enabled, use preprocessor `#define` and use normal C# if statements through a generated static class.
 
 ---
 
@@ -192,8 +192,9 @@ description = "Enables kernel to log to serial port"
 
 define = "FEATURE_SERIAL_SINK"
 
-# This list contains sources to exclude when feature is disabled
-exclude = [
+# Sources the feature owns, relative to the kernel project. They compile only when the feature is enabled.
+# A file can belong to one feature at most. Files that no feature lists always compile.
+sources = [
     "Debug/Sinks/SerialSink.cs"
 ]
 ```
@@ -249,8 +250,8 @@ default = "3"  # always written as text
 - `Features.g.cs` gets an `Options` class with one constant per option, typed `int?` or `string?`. It is written only when the manifest declares options.
 - Options are not part of presets. `configure`, `check --fix`, and feature enable or disable keep the stored values.
 - `validate` checks each option's type and default. `check` refuses a stored value that does not fit its type.
-- Option ids share a namespace with feature ids, so each id must be unique.
-- The menu does not edit options yet.
+- Option ids share a namespace with feature ids, so each id must be unique. Each option needs a `group`, as features do.
+- In the menu, options appear in their group with their current value, for example `Log level: 3`. Selecting one opens a prompt. An empty answer means `null`. Saving stores only values that differ from the default.
 
 ### Choices
 

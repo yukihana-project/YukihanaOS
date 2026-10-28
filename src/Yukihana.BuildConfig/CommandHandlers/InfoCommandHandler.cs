@@ -59,11 +59,11 @@ internal static class InfoCommandHandler
             Log.Information("  {FeatureDependant}", dependant);
         }
 
-        Log.Information("Excluded sources:");
+        Log.Information("Sources (compiled only when enabled):");
 
-        foreach (string exclude in cfg.Exclude)
+        foreach (string source in cfg.Sources)
         {
-            Log.Information("  {FeatureExclude}", exclude);
+            Log.Information("  {FeatureSource}", source);
         }
 
         return 0;

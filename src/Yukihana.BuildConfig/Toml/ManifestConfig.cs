@@ -66,7 +66,10 @@ internal sealed class ManifestConfig
         public bool? EnabledByDefault { get; set; }
         public List<string> Depends { get; set; } = [];
         public List<string> Select { get; set; } = [];
-        public List<string> Exclude { get; set; } = [];
+        public List<string> Sources { get; set; } = [];
+
+        // Replaced by Sources. Kept only so validate can reject it instead of ignoring it
+        public List<string>? Exclude { get; set; }
     }
 }
 

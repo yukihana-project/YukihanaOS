@@ -167,6 +167,7 @@ internal sealed class GroupNode
     public required ManifestConfig.GroupConfig Group { get; init; }
     public List<GroupNode> Children { get; } = [];
     public List<ManifestConfig.FeatureConfig> Features { get; } = [];
+    public List<ManifestConfig.OptionConfig> Options { get; } = [];
 }
 
 internal static class ManifestTreeBuilder
@@ -210,6 +211,17 @@ internal static class ManifestTreeBuilder
             }
 
             group.Features.Add(feature);
+        }
+
+        foreach (ManifestConfig.OptionConfig option in manifest.Option)
+        {
+            if (!groups.TryGetValue(option.Group, out GroupNode? group))
+            {
+                throw new InvalidOperationException(
+                    $"Option '{option.Id}' references unknown group '{option.Group}'.");
+            }
+
+            group.Options.Add(option);
         }
 
         return tree;
