@@ -9,6 +9,7 @@ public sealed class ShellCommandContext
     public required IReadOnlyList<string> Arguments { get; init; }
     public required TextReader In { get; init; }
     public required TextWriter Out { get; init; }
+    public bool OutputIsTerminal { get; init; }
     public required TextWriter Err { get; init; }
     public required ShellCancellation Cancellation { get; init; }
 }

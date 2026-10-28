@@ -13,8 +13,12 @@ public static class ShellLoop
     {
         while (!session.ExitRequested)
         {
-            char promptChar = session.User.Id == UserId.Root ? '#' : '$';
-            Console.Write($"{session.User.Name}@yukihana:{session.CurrentDirectory}{promptChar} ");
+            bool isRoot = session.User.Id == UserId.Root;
+
+            TerminalStyle.Write(Console.Out, true, isRoot ? ConsoleColor.Red : ConsoleColor.Green, session.User.Name);
+            Console.Write("@yukihana:");
+            TerminalStyle.Write(Console.Out, true, ConsoleColor.Cyan, session.CurrentDirectory);
+            Console.Write(isRoot ? "# " : "$ ");
 
             string? line = Console.ReadLine();
 
@@ -27,7 +31,7 @@ public static class ShellLoop
 
             if (parsed.IsFailure)
             {
-                Console.Error.WriteLine(parsed.Error);
+                TerminalStyle.WriteLine(Console.Error, true, ConsoleColor.Red, parsed.Error);
                 continue;
             }
 
@@ -48,7 +52,7 @@ public static class ShellLoop
 
             if (message is not null)
             {
-                Console.Error.WriteLine(message);
+                TerminalStyle.WriteLine(Console.Error, true, ConsoleColor.Red, message);
             }
         }
     }

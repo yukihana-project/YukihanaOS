@@ -45,7 +45,7 @@ public sealed class SudoCommand(ShellCommandRegistry registry) : IShellCommand
             ShellCommandDispatcher dispatcher = new(registry);
             ShellCommandLine line = new(context.Arguments[0], context.Arguments.Skip(1).ToArray());
 
-            return dispatcher.DispatchCommand(context.Session, line, context.In, context.Out);
+            return dispatcher.DispatchCommand(context.Session, line, context.In, context.Out, context.OutputIsTerminal);
         }
         finally
         {

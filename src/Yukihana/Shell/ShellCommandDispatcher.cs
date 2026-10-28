@@ -36,7 +36,7 @@ public sealed class ShellCommandDispatcher(ShellCommandRegistry registry)
             bool isLast = i == stages.Count - 1;
             StringWriter buffer = new();
 
-            result = DispatchCommand(session, stages[i], input, isLast ? Console.Out : buffer);
+            result = DispatchCommand(session, stages[i], input, isLast ? Console.Out : buffer, isLast);
 
             if (result is not ShellCommandResult.Success)
             {
@@ -54,7 +54,8 @@ public sealed class ShellCommandDispatcher(ShellCommandRegistry registry)
         ShellSession session,
         ShellCommandLine line,
         TextReader input,
-        TextWriter output)
+        TextWriter output,
+        bool outputIsTerminal)
     {
         IShellCommand? command = registry.Find(line.Command);
 
@@ -78,6 +79,7 @@ public sealed class ShellCommandDispatcher(ShellCommandRegistry registry)
             Arguments = line.Arguments,
             In = input,
             Out = output,
+            OutputIsTerminal = outputIsTerminal,
             Err = Console.Error,
             Cancellation = new ShellCancellation()
         };

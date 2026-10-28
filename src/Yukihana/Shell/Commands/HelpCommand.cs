@@ -19,7 +19,8 @@ public sealed class HelpCommand(ShellCommandRegistry registry) : IShellCommand
     {
         foreach (IShellCommand command in registry.All.OrderBy(c => c.Name, StringComparer.Ordinal))
         {
-            context.Out.WriteLine($"{command.Name,-10} {command.Summary}");
+            TerminalStyle.Write(context.Out, context.OutputIsTerminal, ConsoleColor.Cyan, $"{command.Name,-10}");
+            context.Out.WriteLine($" {command.Summary}");
         }
 
         return ShellCommandResult.Ok;

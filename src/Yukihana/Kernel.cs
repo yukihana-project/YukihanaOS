@@ -289,7 +289,7 @@ public sealed class Kernel : Sys.Kernel
         }
 
         // Console sink is already off here, so the user is talked to directly
-        Console.WriteLine("No root password is set. Choose one now.");
+        TerminalStyle.WriteLine(Console.Out, true, ConsoleColor.Yellow, "No root password is set. Choose one now.");
         AccountManager.SetPassword(User.Root, PasswordPrompt.ReadNew());
 
         if (!UserDatabase.Save())

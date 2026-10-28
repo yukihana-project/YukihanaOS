@@ -39,7 +39,11 @@ public sealed class LsCommand : IShellCommand
         foreach (IVfsInode entry in entries!)
         {
             bool isDirectory = entry.InodeOperations.GetAttr(entry, out VfsStat stat) && stat.IsDirectory;
-            context.Out.WriteLine(isDirectory ? $"{entry.Name}/" : entry.Name);
+            TerminalStyle.WriteLine(
+                context.Out,
+                context.OutputIsTerminal,
+                isDirectory ? ConsoleColor.Cyan : null,
+                isDirectory ? $"{entry.Name}/" : entry.Name);
         }
 
         return ShellCommandResult.Ok;
