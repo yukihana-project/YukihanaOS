@@ -21,7 +21,7 @@ internal static class InfoCommandHandler
 
         ConfigManager.LoadConfigs(false);
 
-        ManifestConfig.FeatureConfig? cfg = ConfigManager.ManifestConfig!.Feature?.First(f => f.Id == feature);
+        ManifestConfig.FeatureConfig? cfg = ConfigManager.ManifestConfig!.Feature?.FirstOrDefault(f => f.Id == feature);
 
         if (cfg is null)
         {
@@ -35,12 +35,21 @@ internal static class InfoCommandHandler
         Log.Information("Description: {FeatureDesc}", cfg.Description);
         Log.Information("Parent group: {FeatureGroup}", cfg.Group);
         Log.Information("C# define: {FeatureDefine}", cfg.Define);
+        Log.Information("Choice: {FeatureChoice}", FeatureDependencies.ChoiceOf(ConfigManager.ManifestConfig!, cfg.Id)?.Id ?? "none");
+        Log.Information("Enabled by default: {FeatureDefault}", FeatureDependencies.Defaults(ConfigManager.ManifestConfig!).Contains(cfg.Id) ? "yes" : "no");
 
         Log.Information("Depends:");
 
         foreach (string depends in cfg.Depends)
         {
             Log.Information("  {FeatureDepends}", depends);
+        }
+
+        Log.Information("Selects:");
+
+        foreach (string select in cfg.Select)
+        {
+            Log.Information("  {FeatureSelect}", select);
         }
 
         Log.Information("Required by:");

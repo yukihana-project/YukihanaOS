@@ -17,8 +17,18 @@ internal static class ConfigPage
     {
         ConfigManager.LoadConfigs(false);
 
-        ManifestTree tree = ManifestTreeBuilder.Build(ConfigManager.ManifestConfig!);
-        Dictionary<string, bool> featureStates = tree.GetFeatureStates();
+        // Start from the saved selection when there is one, otherwise from the defaults
+        ManifestConfig manifest = ConfigManager.ManifestConfig!;
+        List<string> start = FeatureDependencies.Defaults(manifest);
+
+        if (File.Exists(Configuration.CurrentTomlPath))
+        {
+            ConfigManager.LoadConfigs(true);
+            start = [.. ConfigManager.CurrentConfig!.Enabled ?? []];
+        }
+
+        ManifestTree tree = ManifestTreeBuilder.Build(manifest);
+        Dictionary<string, bool> featureStates = tree.GetFeatureStates(start);
 
         GroupNode? node = null;
 
@@ -84,6 +94,12 @@ internal static class ConfigPage
                     return tree.GetParent(current);
                 }
             case Save:
+                if (FeatureDependencies.FindProblem(ConfigManager.ManifestConfig!, featureStates.Where(kv => kv.Value).Select(kv => kv.Key)) is { } problem)
+                {
+                    s_notice = $"[yellow]Not saved: {problem}[/]";
+                    break;
+                }
+
                 ConfigManager.UpdateCurrentConfig(featureStates);
                 SourceGenerator.GenerateFromCurrent();
                 AnsiConsole.Clear();
@@ -132,11 +148,20 @@ internal static class ConfigPage
 
     private static string FeatureLabel(ManifestConfig manifest, ManifestConfig.FeatureConfig feature, Dictionary<string, bool> featureStates)
     {
-        string label = (featureStates[feature.Id] ? "[[*]] " : "[[ ]] ") + feature.Name;
+        bool on = featureStates[feature.Id];
+        string box = FeatureDependencies.ChoiceOf(manifest, feature.Id) is null
+            ? (on ? "[[*]] " : "[[ ]] ")
+            : (on ? "(*) " : "( ) ");
+        string label = box + feature.Name;
 
         if (feature.Depends.Count > 0)
         {
             label += $" [gray](requires: {NamesOf(manifest, feature.Depends)})[/]";
+        }
+
+        if (feature.Select.Count > 0)
+        {
+            label += $" [gray](selects: {NamesOf(manifest, feature.Select)})[/]";
         }
 
         List<string> requiredBy = FeatureDependencies.RequiredBy(manifest, feature.Id);
@@ -160,21 +185,57 @@ internal static class ConfigPage
                 return;
             }
 
+            IEnumerable<string> rest = featureStates.Where(kv => kv.Value && kv.Key != id).Select(kv => kv.Key);
+
+            if (FeatureDependencies.FindProblem(manifest, rest) is { } blocked)
+            {
+                s_notice = $"[yellow]Can't disable {NamesOf(manifest, [id])}: {blocked}[/]";
+                return;
+            }
+
             featureStates[id] = false;
             return;
         }
 
-        List<string> toEnable = [.. FeatureDependencies.WithRequirements(manifest, id).Where(d => !featureStates[d])];
+        List<string> toEnable = [.. FeatureDependencies.WithSelected(manifest, id).Where(d => !featureStates[d])];
+
+        // Enabling a choice member switches off its sibling. Selected members never switch
+        ManifestConfig.ChoiceConfig? choice = FeatureDependencies.ChoiceOf(manifest, id);
+        List<string> switchedOff = [.. featureStates.Where(kv => kv.Value && choice is not null && choice.Members.Contains(kv.Key)).Select(kv => kv.Key)];
+        IEnumerable<string> after = featureStates.Where(kv => kv.Value && !switchedOff.Contains(kv.Key)).Select(kv => kv.Key).Concat(toEnable);
+
+        if (FeatureDependencies.FindProblem(manifest, after) is { } problem)
+        {
+            s_notice = $"[yellow]Can't enable {NamesOf(manifest, [id])}: {problem}[/]";
+            return;
+        }
+
+        foreach (string off in switchedOff)
+        {
+            featureStates[off] = false;
+        }
 
         foreach (string enable in toEnable)
         {
             featureStates[enable] = true;
         }
 
-        List<string> required = [.. toEnable.Where(d => d != id)];
-        if (required.Count > 0)
+        List<string> notes = [];
+
+        if (switchedOff.Count > 0)
         {
-            s_notice = $"[yellow]Also enabled {NamesOf(manifest, required)} (required by {NamesOf(manifest, [id])})[/]";
+            notes.Add($"Switched off {NamesOf(manifest, switchedOff)}");
+        }
+
+        List<string> selected = [.. toEnable.Where(d => d != id)];
+        if (selected.Count > 0)
+        {
+            notes.Add($"Also enabled {NamesOf(manifest, selected)} (selected by {NamesOf(manifest, [id])})");
+        }
+
+        if (notes.Count > 0)
+        {
+            s_notice = $"[yellow]{string.Join(". ", notes)}[/]";
         }
     }
 
