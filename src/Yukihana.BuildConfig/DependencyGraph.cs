@@ -20,7 +20,7 @@ internal sealed class ResolvedNode
 
 internal sealed class DependencyGraph
 {
-    private readonly HashSet<DependencyNode> _visited = [];
+    private readonly Dictionary<DependencyNode, ResolvedNode> _visited = [];
     private readonly HashSet<DependencyNode> _visiting = [];
 
     private DependencyNode[] _nodes = [];
@@ -41,7 +41,7 @@ internal sealed class DependencyGraph
 
         foreach (DependencyNode node in _nodes)
         {
-            if (!_visited.Contains(node))
+            if (!_visited.ContainsKey(node))
             {
                 BuildOrder.Add(DFS(node));
             }
@@ -56,10 +56,10 @@ internal sealed class DependencyGraph
                 $"Cycle detected involving '{current.Id}'.");
         }
 
-        if (_visited.Contains(current))
+        // Shared dependency (diamond): already resolved, reuse it
+        if (_visited.TryGetValue(current, out ResolvedNode? existing))
         {
-            throw new InvalidOperationException(
-                $"'{current.Id}' has already been resolved.");
+            return existing;
         }
 
         _visiting.Add(current);
@@ -83,7 +83,7 @@ internal sealed class DependencyGraph
         }
 
         _visiting.Remove(current);
-        _visited.Add(current);
+        _visited[current] = resolved;
 
         return resolved;
     }

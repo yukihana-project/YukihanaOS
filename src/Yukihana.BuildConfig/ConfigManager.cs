@@ -96,7 +96,8 @@ internal static class ConfigManager
         }
         catch
         {
-
+            // Missing or unreadable state; callers decide what to do with null
+            StateConfig = null;
         }
     }
 

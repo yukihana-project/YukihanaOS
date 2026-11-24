@@ -34,16 +34,13 @@ internal static class InitCommandHandler
             File.Create(manifestPath);
         }
 
-        if (Configuration.Features.BuildInitRamFs)
+        if (!Directory.Exists(Configuration.InitRamFsSourcePath))
         {
-            if (!Directory.Exists(Configuration.InitRamFsSourcePath))
-            {
-                Directory.CreateDirectory(Configuration.InitRamFsSourcePath);
-            }
-            if (!Directory.Exists(Configuration.DefaultInitRamFsPath))
-            {
-                Directory.CreateDirectory(Configuration.DefaultInitRamFsPath);
-            }
+            Directory.CreateDirectory(Configuration.InitRamFsSourcePath);
+        }
+        if (!Directory.Exists(Configuration.DefaultInitRamFsPath))
+        {
+            Directory.CreateDirectory(Configuration.DefaultInitRamFsPath);
         }
 
         Log.Information("You would need to fill .toml files your self. Use --help to know more");

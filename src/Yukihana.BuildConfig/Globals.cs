@@ -72,9 +72,15 @@ internal static class Globals
             Description = "Regenerate outdated files."
         };
 
+        public static Option<bool> RegenerateStateOption { get; set; } = new("--regenerate-state")
+        {
+            Description = "Rewrite State.toml from Manifest.toml and Current.toml. Refused if generated files do not match."
+        };
+
         public static Command CheckCommand { get; set; } = new("check", "Verify configuration.")
         {
-            FixOption
+            FixOption,
+            RegenerateStateOption
         };
 
         #endregion

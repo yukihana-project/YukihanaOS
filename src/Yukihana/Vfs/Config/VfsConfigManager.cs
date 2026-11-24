@@ -180,6 +180,31 @@ public sealed class VfsConfigManager
         return string.Empty;
     }
 
+    /// <summary>
+    /// Mounts the first partition that probes as a known filesystem. Used when there is no initramfs root.
+    /// </summary>
+    public bool TryMountFirstVolume(string mountPoint, MountFlags flags, out VfsMount? mount)
+    {
+        mount = null;
+        IReadOnlyList<Partition> partitions = StorageManager.Partitions;
+
+        for (int i = 0; i < partitions.Count; i++)
+        {
+            if (!FilesystemProber.ProbeFilesystem(partitions[i], out FilesystemProbeResult result))
+            {
+                continue;
+            }
+
+            _logger.Info($"Found '{result.Filesystem}' volume at index '{i}'");
+
+            // shortcut: only FAT is probed and registered, so probe names (fat12/16/32) map to "fat". Upgrade when more types arrive
+            return VfsManager.TryMount("fat", $"{i}", flags, mountPoint, out mount);
+        }
+
+        _logger.Error("No known volume found");
+        return false;
+    }
+
     public VfsMount? Mount(string filesystemType, string source, MountFlags flags, string mountPoint)
     {
         if (VfsManager.TryMount(filesystemType, source, flags, mountPoint, out VfsMount? mount))

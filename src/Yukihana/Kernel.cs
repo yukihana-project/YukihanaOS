@@ -32,10 +32,12 @@ public sealed class Kernel : Sys.Kernel
 {
     public static DateTime BootTime { get; }
 
+#if FEATURE_INIT_RAM_FS
     private const string RamfsPath = "Yukihana";
     private const string RamfsFile = "initramfs.cpio.gz";
 
     private static string RamfsResourceKey => string.Join('.', RamfsPath, RamfsFile);
+#endif
 
     private static readonly Logger s_kernelLogger;
     private static readonly VfsConfigManager s_vfsMan;
@@ -111,6 +113,7 @@ public sealed class Kernel : Sys.Kernel
 
         VfsInit.InitVfs(logger, s_vfsMan);
 
+#if FEATURE_INIT_RAM_FS
         logger.Info($"Fetching \"{RamfsFile}\".");
         byte[]? ramfsBytes = null;
 
@@ -131,8 +134,11 @@ public sealed class Kernel : Sys.Kernel
             }
         }
 
+#endif
+
         logger.Info($"Discovered {StorageManager.Partitions.Count} partitions");
 
+#if FEATURE_INIT_RAM_FS
         ArchiveImage? ramfsImage = null;
         if (ramfsBytes is not null)
         {
@@ -165,6 +171,20 @@ public sealed class Kernel : Sys.Kernel
             }
         }
 
+#else
+        // TODO: replace with a jump to shell, so the user can mount root themselves
+        logger.Warn("Built without init_ram_fs, mounting first volume as '/'");
+
+        if (s_vfsMan.TryMountFirstVolume("/", MountFlags.ReadOnly, out _))
+        {
+            logger.Info("Mounted first volume as '/'");
+        }
+        else
+        {
+            logger.Error("Unable to mount any volume as '/'");
+        }
+#endif
+
         var fontGroup = new OptionalResourceGroup<FontState>(
             name: "Fonts",
             createState: () => new FontState(),
@@ -193,6 +213,7 @@ public sealed class Kernel : Sys.Kernel
             string content = File.ReadAllText("/etc/fstab");
             s_vfsMan.LoadConfig(content);
 
+#if FEATURE_INIT_RAM_FS
             logger.Info("Unmounting initfs");
             if (!VfsManager.TryUnmount("/"))
             {
@@ -202,6 +223,8 @@ public sealed class Kernel : Sys.Kernel
             {
                 logger.Info("Unmounted initfs");
             }
+
+#endif
 
             s_vfsMan.TryMountAll(out _);
         }
@@ -312,6 +335,7 @@ public sealed class Kernel : Sys.Kernel
         s_kernelLogger.Info("Bye.");
     }
 
+#if FEATURE_INIT_RAM_FS
     private ArchiveImage LoadInitRamFs(byte[] data, Logger logger)
     {
         logger.Info("Has initramfs provided");
@@ -339,4 +363,5 @@ public sealed class Kernel : Sys.Kernel
 
         return archivator.Value.Read(decompressed);
     }
+#endif
 }

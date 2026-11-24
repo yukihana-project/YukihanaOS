@@ -16,13 +16,13 @@ namespace Yukihana.BuildConfig;
 
 internal static class SourceGenerator
 {
-    private const string INTERNAL_EXCLUDE_TARGET = "_YKConfig_Internal_ExcludeGeneratedFiles";
     private const string INTERNAL_INCLUDE_SOURCE_TARGET = "_YKConfig_Internal_IncludeGeneratedSource";
     private const string EXCLUDE_ITEM_TEMPLATE = "_YKConfig_ExcludeFeature_{0}";
     private const string INCLUDE_ITEM_TEMPLATE = "_YKConfig_IncludeFeature_{0}";
 
 
     private const string INTERNAL_RAMFS_TARGET = "_YKConfig_Internal_IncludeInitRamFs";
+    private const string INIT_RAM_FS_FEATURE_ID = "init_ram_fs";
 
     public static void GenerateFromCurrent()
     {
@@ -31,10 +31,12 @@ internal static class SourceGenerator
         ManifestConfig manifest = ConfigManager.ManifestConfig!;
         CurrentConfig current = ConfigManager.CurrentConfig!;
 
-        Log.Verbose("Building dependency graph");
+        HashSet<ResolvedNode> allFeatures = ResolveFeatures(manifest, current);
 
-        List<ResolvedNode> graph = BuildResolvedGraph(manifest, current);
-        HashSet<ResolvedNode> allFeatures = Flatten(graph);
+        if (allFeatures.Any(n => n.Id == INIT_RAM_FS_FEATURE_ID))
+        {
+            BuildRamFs();
+        }
 
         string outputPath = Configuration.GeneratedCsFilePath;
 
@@ -55,6 +57,17 @@ internal static class SourceGenerator
             string generatedTargets = GenerateTargetsFile(allFeatures, manifest);
             targetsFs.Write(Encoding.UTF8.GetBytes(generatedTargets));
         }
+
+        WriteState();
+    }
+
+    /// <summary>
+    /// Writes State.toml with hashes of the current Manifest.toml and Current.toml.
+    /// Does not touch generated sources, so callers must make sure they match first.
+    /// </summary>
+    public static void WriteState()
+    {
+        CurrentConfig current = ConfigManager.CurrentConfig!;
 
         Log.Verbose("Creating State file");
 
@@ -78,8 +91,34 @@ internal static class SourceGenerator
             }
         }
 
-        using FileStream stateStream = File.OpenWrite(Configuration.StateTomlPath);
+        using FileStream stateStream = File.Open(Configuration.StateTomlPath, FileMode.Create, FileAccess.Write, FileShare.None);
         TomlSerializer.Serialize(stateStream, ConfigManager.StateConfig, StateConfigContext.Default);
+    }
+
+    /// <summary>
+    /// True when Features.g.cs and Features.g.targets already hold what Current.toml would generate.
+    /// Writes nothing.
+    /// </summary>
+    public static bool GeneratedFilesMatchCurrent()
+    {
+        ConfigManager.LoadConfigs();
+
+        ManifestConfig manifest = ConfigManager.ManifestConfig!;
+        HashSet<ResolvedNode> allFeatures = ResolveFeatures(manifest, ConfigManager.CurrentConfig!);
+
+        return FileMatches(Configuration.GeneratedCsFilePath, GenerateFeatureConstants(allFeatures, manifest))
+            && FileMatches(Configuration.GeneratedTargetsFilePath, GenerateTargetsFile(allFeatures, manifest));
+    }
+
+    private static bool FileMatches(string path, string expected)
+    {
+        return File.Exists(path) && File.ReadAllText(path) == expected;
+    }
+
+    private static HashSet<ResolvedNode> ResolveFeatures(ManifestConfig manifest, CurrentConfig current)
+    {
+        Log.Verbose("Building dependency graph");
+        return Flatten(BuildResolvedGraph(manifest, current));
     }
 
     private static List<ResolvedNode> BuildResolvedGraph(
@@ -189,25 +228,22 @@ internal static class SourceGenerator
 
         Log.Verbose("Generating internal targets");
 
-        generator.AddTarget(INTERNAL_EXCLUDE_TARGET)
-            .Before(TARGET_BEFORE)
-            .Message("Excluding Generated directory", TargetsFileGenerator.Importance.Low)
-            .ExcludeCompile(Path.Join(Configuration.OutputDirectoryPath, "*"));
-
         generator.AddTarget(INTERNAL_INCLUDE_SOURCE_TARGET)
             .Before(TARGET_BEFORE)
-            .After(INTERNAL_EXCLUDE_TARGET)
             .Message("Including Features.g.cs", TargetsFileGenerator.Importance.Low)
             .IncludeCompile(Configuration.GeneratedCsFilePath);
-
-        if (Configuration.Features.BuildInitRamFs)
-        {
-            BuildRamFs(generator);
-        }
 
         var enabledIds = graph
             .Select(rn => rn.Id)
             .ToHashSet(StringComparer.Ordinal);
+
+        if (enabledIds.Contains(INIT_RAM_FS_FEATURE_ID) && HasInitRamFsSource())
+        {
+            generator.AddTarget(INTERNAL_RAMFS_TARGET)
+                .Before("PrepareForBuild")
+                .Message("Including initramfs.cpio.gz")
+                .EmbedResource(Configuration.GeneratedInitRamFsPath, Configuration.InitRamFsLogicalName, $"Exists('{Configuration.GeneratedInitRamFsPath}')");
+        }
 
         var included = manifest.Feature.Where(f => enabledIds.Contains(f.Id));
         var excluded = manifest.Feature.Where(f => !enabledIds.Contains(f.Id));
@@ -241,17 +277,18 @@ internal static class SourceGenerator
         return generator.Generate();
     }
 
-    private static void BuildRamFs(TargetsFileGenerator generator)
+    private static bool HasInitRamFsSource()
     {
-        if (!Directory.Exists(Configuration.DefaultInitRamFsPath) && !Directory.Exists(Configuration.LocalInitRamFsPath))
+        return Directory.Exists(Configuration.DefaultInitRamFsPath) || Directory.Exists(Configuration.LocalInitRamFsPath);
+    }
+
+    private static void BuildRamFs()
+    {
+        if (!HasInitRamFsSource())
         {
             Log.Warning("Unable to create initramfs as no directories exists. Run init command.");
             return;
         }
-
-        var target = generator.AddTarget(INTERNAL_RAMFS_TARGET)
-                        .Before("PrepareForBuild")
-                        .Message("Including initramfs.cpio.gz");
 
         // Get directory to build
 
@@ -314,9 +351,5 @@ internal static class SourceGenerator
         {
             File.Delete(Path.Combine(Configuration.OutputDirectoryPath, "initramfs.cpio"));
         }
-
-        // Embed file
-
-        target.EmbedResource(Configuration.GeneratedInitRamFsPath, Configuration.InitRamFsLogicalName, $"Exists('{Configuration.GeneratedInitRamFsPath}')");
     }
 }

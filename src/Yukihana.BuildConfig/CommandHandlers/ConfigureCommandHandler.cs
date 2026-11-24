@@ -37,6 +37,11 @@ internal static class ConfigureManager
             return 1;
         }
 
+        if (ValidateHandler.Validate() != 0)
+        {
+            return 1;
+        }
+
         if (doClean)
         {
             foreach (string file in Directory.EnumerateFiles(Configuration.OutputDirectoryPath))
