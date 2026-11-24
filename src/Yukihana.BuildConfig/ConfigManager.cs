@@ -101,11 +101,12 @@ internal static class ConfigManager
         }
     }
 
-    public static void UpdateCurrentConfig(Dictionary<string, bool> features)
+    public static void UpdateCurrentConfig(Dictionary<string, bool> features, Dictionary<string, string> options)
     {
         CurrentConfig = new()
         {
             Enabled = [.. features.Where(kv => kv.Value).Select(kv => kv.Key)],
+            Options = options
         };
 
         try
