@@ -17,6 +17,93 @@ id = "debug.logger"
 name = "Logger"
 parent = "debug"
 
+[[group]]
+id = "display"
+name = "Display"
+
+[[group]]
+id = "archive"
+name = "Archive"
+
+[[group]]
+id = "filesystem"
+name = "Filesystems"
+
+[[feature]]
+id = "archives"
+name = "Archive Formats"
+group = "archive"
+
+description = "Compressors and cpio/tar readers"
+
+sources = [
+    "Core/Compression/ArchiveCompressorFactory.cs",
+    "Core/Compression/IArchiveCompressor.cs",
+    "Core/Compression/Bzip2ArchiveCompressor.cs",
+    "Core/Compression/GzipArchiveCompressor.cs",
+    "Core/Compression/Archives/ArchivatorFactory.cs",
+    "Core/Compression/Archives/ArchiveEntry.cs",
+    "Core/Compression/Archives/ArchiveEntryKind.cs",
+    "Core/Compression/Archives/ArchiveImage.cs",
+    "Core/Compression/Archives/ArchiveKind.cs",
+    "Core/Compression/Archives/ArchivePath.cs",
+    "Core/Compression/Archives/CpioArchivator.cs",
+    "Core/Compression/Archives/IArchivator.cs",
+    "Core/Compression/Archives/TarArchivator.cs"
+]
+
+[[feature]]
+id = "fs_fat"
+name = "FAT"
+group = "filesystem"
+
+description = "FAT filesystem and its probe, used for fstab mounts and volume lookup"
+
+define = "FEATURE_FS_FAT"
+
+sources = [
+    "Vfs/Probe/Filesystem/FatProbe.cs"
+]
+
+[[feature]]
+id = "fs_initfs"
+name = "InitFS"
+group = "filesystem"
+
+description = "Read-only filesystem served from the initramfs archive"
+
+# The filesystem reads archives
+select = ["archives"]
+
+sources = [
+    "Vfs/Filesystem/InitFs/InitFsSuperBlock.cs",
+    "Vfs/Filesystem/InitFs/InitfsFileOperations.cs",
+    "Vfs/Filesystem/InitFs/InitfsFilesystemType.cs",
+    "Vfs/Filesystem/InitFs/InitfsInode.cs",
+    "Vfs/Filesystem/InitFs/InitfsInodeOperations.cs",
+    "Vfs/Filesystem/InitFs/InitfsOpenFile.cs",
+    "Vfs/Filesystem/InitFs/InitfsSuperblockOperations.cs",
+    "Vfs/Device/BlockDeviceStream.cs",
+    "Vfs/Device/MemoryBlockDevice.cs"
+]
+
+[[feature]]
+id = "fstab"
+name = "fstab"
+group = "filesystem"
+
+description = "Mounts the filesystems listed in /etc/fstab"
+
+define = "FEATURE_FSTAB"
+
+sources = [
+    "Vfs/Config/VfsConfigParser.cs",
+    "Vfs/Config/VfsMountConfig.cs",
+    "Vfs/Config/SourceType.cs",
+    "Vfs/Config/VfsConfigManager.Fstab.cs"
+]
+
+
 # ------------------
 # Features
 # ------------------
@@ -31,6 +118,9 @@ description = "Allows kernel to load temporary filesystem from archive."
 define = "FEATURE_INIT_RAM_FS"
 enabled_by_default = true
 
+# The initramfs reads archives and is served by the initfs filesystem
+select = ["archives", "fs_initfs"]
+
 [[feature]]
 id = "sinks_serial"
 name = "Serial Sink"
@@ -40,6 +130,21 @@ description = "Enables kernel to log to serial port"
 
 define = "FEATURE_SERIAL_SINK"
 
-exclude = [
+# Files this feature owns. They compile only while the feature is enabled
+sources = [
     "Debug/Sinks/SerialSink.cs"
+]
+
+[[feature]]
+id = "console_font"
+name = "Console Font"
+group = "display"
+
+description = "Loads the console font from the filesystem"
+
+define = "FEATURE_CONSOLE_FONT"
+enabled_by_default = true
+
+sources = [
+    "Resources/Fonts.cs"
 ]

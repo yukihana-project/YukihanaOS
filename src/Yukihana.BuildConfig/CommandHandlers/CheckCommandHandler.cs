@@ -18,6 +18,12 @@ internal static class CheckCommandHandler
 
         ConfigManager.LoadConfigs(true);
 
+        if (FeatureDependencies.FindProblem(ConfigManager.ManifestConfig!, ConfigManager.CurrentConfig!.Enabled ?? []) is { } problem)
+        {
+            Log.Fatal("Current.toml is invalid: {Problem}", problem);
+            return 1;
+        }
+
         if (regenState)
         {
             return RegenerateState();
@@ -150,7 +156,7 @@ internal static class CheckCommandHandler
     {
         if (ValidateHandler.Validate() != 0)
         {
-            Log.Fatal("Cannot generate sources with unknown features");
+            Log.Fatal("Cannot generate sources: Manifest.toml or a preset is invalid (see the errors above)");
             return 1;
         }
 
@@ -169,7 +175,8 @@ internal static class CheckCommandHandler
             CurrentConfig newCurrent = new()
             {
                 Enabled = [.. ConfigManager.ManifestConfig!.Feature.Where(f => preset.Enabled.Contains(f.Id)).Select(f => f.Id)],
-                Config = presetName
+                Config = presetName,
+                Options = ConfigManager.CurrentConfig!.Options
             };
 
             using (FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.Write, FileShare.None))
