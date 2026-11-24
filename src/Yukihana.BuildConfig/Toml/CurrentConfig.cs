@@ -12,6 +12,9 @@ internal sealed class CurrentConfig
     public int Version { get; set; } = 1;
     public string? Config { get; set; }
     public List<string>? Enabled { get; set; } = [];
+
+    // Option id to stored value. An empty string means null
+    public Dictionary<string, string>? Options { get; set; }
 }
 
 [TomlSourceGenerationOptions(
