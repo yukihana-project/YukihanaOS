@@ -72,9 +72,15 @@ internal static class Globals
             Description = "Regenerate outdated files."
         };
 
+        public static Option<bool> RegenerateStateOption { get; set; } = new("--regenerate-state")
+        {
+            Description = "Rewrite State.toml from Manifest.toml and Current.toml. Refused if generated files do not match."
+        };
+
         public static Command CheckCommand { get; set; } = new("check", "Verify configuration.")
         {
-            FixOption
+            FixOption,
+            RegenerateStateOption
         };
 
         #endregion
@@ -151,10 +157,19 @@ internal static class Globals
         //    FeatureArgument
         //};
 
+        public static Argument<string> ValueArgument { get; set; } = new("value");
+
+        public static Command SetSubcommand { get; set; } = new("set", "Set an option value. An empty value means null.")
+        {
+            FeatureArgument,
+            ValueArgument
+        };
+
         public static Command FeatureCommand { get; set; } = new("feature", "Modify single feature.")
         {
             EnableSubcommand,
             DisableSubcommand,
+            SetSubcommand,
             //ToggleSubcommand
         };
 

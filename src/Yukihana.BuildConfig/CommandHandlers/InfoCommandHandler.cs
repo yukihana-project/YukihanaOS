@@ -21,7 +21,7 @@ internal static class InfoCommandHandler
 
         ConfigManager.LoadConfigs(false);
 
-        ManifestConfig.FeatureConfig? cfg = ConfigManager.ManifestConfig!.Feature?.First(f => f.Id == feature);
+        ManifestConfig.FeatureConfig? cfg = ConfigManager.ManifestConfig!.Feature?.FirstOrDefault(f => f.Id == feature);
 
         if (cfg is null)
         {
@@ -35,6 +35,8 @@ internal static class InfoCommandHandler
         Log.Information("Description: {FeatureDesc}", cfg.Description);
         Log.Information("Parent group: {FeatureGroup}", cfg.Group);
         Log.Information("C# define: {FeatureDefine}", cfg.Define);
+        Log.Information("Choice: {FeatureChoice}", FeatureDependencies.ChoiceOf(ConfigManager.ManifestConfig!, cfg.Id)?.Id ?? "none");
+        Log.Information("Enabled by default: {FeatureDefault}", FeatureDependencies.Defaults(ConfigManager.ManifestConfig!).Contains(cfg.Id) ? "yes" : "no");
 
         Log.Information("Depends:");
 
@@ -43,11 +45,25 @@ internal static class InfoCommandHandler
             Log.Information("  {FeatureDepends}", depends);
         }
 
-        Log.Information("Excluded sources:");
+        Log.Information("Selects:");
 
-        foreach (string exclude in cfg.Exclude)
+        foreach (string select in cfg.Select)
         {
-            Log.Information("  {FeatureExclude}", exclude);
+            Log.Information("  {FeatureSelect}", select);
+        }
+
+        Log.Information("Required by:");
+
+        foreach (string dependant in FeatureDependencies.RequiredBy(ConfigManager.ManifestConfig!, cfg.Id))
+        {
+            Log.Information("  {FeatureDependant}", dependant);
+        }
+
+        Log.Information("Sources (compiled only when enabled):");
+
+        foreach (string source in cfg.Sources)
+        {
+            Log.Information("  {FeatureSource}", source);
         }
 
         return 0;

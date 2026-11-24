@@ -14,13 +14,38 @@ internal static class CheckCommandHandler
     internal static int Handle(ParseResult result)
     {
         bool doFix = result.GetValue(Globals.Args.FixOption);
+        bool regenState = result.GetValue(Globals.Args.RegenerateStateOption);
 
         ConfigManager.LoadConfigs(true);
 
-        if (!File.Exists(Configuration.StateTomlPath) || ConfigManager.StateConfig is null)
+        if (FeatureDependencies.FindProblem(ConfigManager.ManifestConfig!, ConfigManager.CurrentConfig!.Enabled ?? []) is { } problem)
+        {
+            Log.Fatal("Current.toml is invalid: {Problem}", problem);
+            return 1;
+        }
+
+        if (regenState)
+        {
+            return RegenerateState();
+        }
+
+        if (!File.Exists(Configuration.StateTomlPath))
         {
             Log.Fatal("No configuration was generated. Please, generate configuration before checking");
             return 1;
+        }
+
+        if (ConfigManager.StateConfig is null)
+        {
+            Log.Warning("State.toml could not be read");
+
+            if (!doFix)
+            {
+                Log.Information("Run 'check --fix' or 'check --regenerate-state' to rebuild it");
+                return 1;
+            }
+
+            return RegenerateFromCurrent();
         }
 
         StateConfig state = ConfigManager.StateConfig;
@@ -36,6 +61,11 @@ internal static class CheckCommandHandler
             }
 
             Log.Information("Updating current configuration");
+
+            if (ValidateHandler.Validate() != 0)
+            {
+                return 1;
+            }
 
             SourceGenerator.GenerateFromCurrent();
             return 0;
@@ -82,6 +112,43 @@ internal static class CheckCommandHandler
             return Regenerate();
         }
 
+        if (!SourceGenerator.GeneratedFilesMatchCurrent())
+        {
+            Log.Warning("The generated files do not match Current.toml");
+
+            if (!doFix)
+            {
+                return 1;
+            }
+
+            // Current.toml is the source of truth here, so regenerate without re-applying the preset
+            return RegenerateFromCurrent();
+        }
+
+        return 0;
+    }
+
+    private static int RegenerateFromCurrent()
+    {
+        if (ValidateHandler.Validate() != 0)
+        {
+            return 1;
+        }
+
+        SourceGenerator.GenerateFromCurrent();
+        return 0;
+    }
+
+    private static int RegenerateState()
+    {
+        if (!SourceGenerator.GeneratedFilesMatchCurrent())
+        {
+            Log.Fatal("The generated files do not match Current.toml. Run 'check --fix' first");
+            return 1;
+        }
+
+        SourceGenerator.WriteState();
+        Log.Information("Regenerated State.toml");
         return 0;
     }
 
@@ -89,7 +156,7 @@ internal static class CheckCommandHandler
     {
         if (ValidateHandler.Validate() != 0)
         {
-            Log.Fatal("Cannot generate sources with unknown features");
+            Log.Fatal("Cannot generate sources: Manifest.toml or a preset is invalid (see the errors above)");
             return 1;
         }
 
@@ -108,13 +175,17 @@ internal static class CheckCommandHandler
             CurrentConfig newCurrent = new()
             {
                 Enabled = [.. ConfigManager.ManifestConfig!.Feature.Where(f => preset.Enabled.Contains(f.Id)).Select(f => f.Id)],
-                Config = presetName
+                Config = presetName,
+                Options = ConfigManager.CurrentConfig!.Options
             };
 
             using (FileStream fs = File.Open(Configuration.CurrentTomlPath, FileMode.Create, FileAccess.Write, FileShare.None))
             {
                 TomlSerializer.Serialize(fs, newCurrent, CurrentConfigContext.Default);
             }
+
+            // Generator reads the in-memory config, so it has to match what was just written
+            ConfigManager.CurrentConfig = newCurrent;
         }
         else
         {

@@ -8,8 +8,10 @@ using Cosmos.Kernel.System.Graphics;
 using Cosmos.Kernel.System.Graphics.Fonts;
 using Cosmos.Kernel.System.Storage;
 using Yukihana.Boot;
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Core.Compression;
 using Yukihana.Core.Compression.Archives;
+#endif
 using Yukihana.Core.Extensions.Primitives;
 using Yukihana.Core.Extensions.System;
 using Yukihana.Core.Primitives;
@@ -18,12 +20,18 @@ using Yukihana.Debug.Formatters;
 using Yukihana.Debug.Sinks;
 using Yukihana.IO.Loaders;
 using Yukihana.IO.Loaders.Optional;
+#if FEATURE_CONSOLE_FONT
 using Yukihana.Resources;
+#endif
 using Yukihana.Security;
 using Yukihana.Vfs;
 using Yukihana.Vfs.Config;
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Vfs.Device;
+#endif
+#if FEATURE_INIT_RAM_FS
 using Yukihana.Vfs.Filesystem.InitFs;
+#endif
 using Sys = Cosmos.Kernel.System;
 
 namespace Yukihana;
@@ -32,10 +40,12 @@ public sealed class Kernel : Sys.Kernel
 {
     public static DateTime BootTime { get; }
 
+#if FEATURE_INIT_RAM_FS
     private const string RamfsPath = "Yukihana";
     private const string RamfsFile = "initramfs.cpio.gz";
 
     private static string RamfsResourceKey => string.Join('.', RamfsPath, RamfsFile);
+#endif
 
     private static readonly Logger s_kernelLogger;
     private static readonly VfsConfigManager s_vfsMan;
@@ -111,6 +121,7 @@ public sealed class Kernel : Sys.Kernel
 
         VfsInit.InitVfs(logger, s_vfsMan);
 
+#if FEATURE_INIT_RAM_FS
         logger.Info($"Fetching \"{RamfsFile}\".");
         byte[]? ramfsBytes = null;
 
@@ -131,8 +142,11 @@ public sealed class Kernel : Sys.Kernel
             }
         }
 
+#endif
+
         logger.Info($"Discovered {StorageManager.Partitions.Count} partitions");
 
+#if FEATURE_INIT_RAM_FS
         ArchiveImage? ramfsImage = null;
         if (ramfsBytes is not null)
         {
@@ -165,6 +179,21 @@ public sealed class Kernel : Sys.Kernel
             }
         }
 
+#else
+        // TODO: replace with a jump to shell, so the user can mount root themselves
+        logger.Warn("Built without init_ram_fs, mounting first volume as '/'");
+
+        if (s_vfsMan.TryMountFirstVolume("/", MountFlags.ReadOnly, out _))
+        {
+            logger.Info("Mounted first volume as '/'");
+        }
+        else
+        {
+            logger.Error("Unable to mount any volume as '/'");
+        }
+#endif
+
+#if FEATURE_CONSOLE_FONT
         var fontGroup = new OptionalResourceGroup<FontState>(
             name: "Fonts",
             createState: () => new FontState(),
@@ -186,13 +215,16 @@ public sealed class Kernel : Sys.Kernel
             },
             none: () => { }
         );
+#endif
 
+#if FEATURE_FSTAB
         logger.Info("Reading fstab");
         if (File.Exists("/etc/fstab"))
         {
             string content = File.ReadAllText("/etc/fstab");
             s_vfsMan.LoadConfig(content);
 
+#if FEATURE_INIT_RAM_FS
             logger.Info("Unmounting initfs");
             if (!VfsManager.TryUnmount("/"))
             {
@@ -203,12 +235,17 @@ public sealed class Kernel : Sys.Kernel
                 logger.Info("Unmounted initfs");
             }
 
+#endif
+
             s_vfsMan.TryMountAll(out _);
         }
         else
         {
             logger.Error("Unable to locate fstab! No filesystem will be mounted");
         }
+#else
+        logger.Info("fstab feature is off, no filesystems are mounted from it");
+#endif
 
         /*
         logger.Warn("Mounting /tmp as FAT 16, bypassing fstab");
@@ -312,6 +349,7 @@ public sealed class Kernel : Sys.Kernel
         s_kernelLogger.Info("Bye.");
     }
 
+#if FEATURE_INIT_RAM_FS
     private ArchiveImage LoadInitRamFs(byte[] data, Logger logger)
     {
         logger.Info("Has initramfs provided");
@@ -339,4 +377,5 @@ public sealed class Kernel : Sys.Kernel
 
         return archivator.Value.Read(decompressed);
     }
+#endif
 }

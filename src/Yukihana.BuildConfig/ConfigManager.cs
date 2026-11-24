@@ -96,15 +96,17 @@ internal static class ConfigManager
         }
         catch
         {
-
+            // Missing or unreadable state; callers decide what to do with null
+            StateConfig = null;
         }
     }
 
-    public static void UpdateCurrentConfig(Dictionary<string, bool> features)
+    public static void UpdateCurrentConfig(Dictionary<string, bool> features, Dictionary<string, string> options)
     {
         CurrentConfig = new()
         {
             Enabled = [.. features.Where(kv => kv.Value).Select(kv => kv.Key)],
+            Options = options
         };
 
         try

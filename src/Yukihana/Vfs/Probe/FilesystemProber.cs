@@ -2,14 +2,18 @@
 // Licensed under the Apache 2.0 License. See LICENSE for details.
 
 using Cosmos.Kernel.System.Storage;
+#if FEATURE_FS_FAT
 using Yukihana.Vfs.Probe.Filesystem;
+#endif
 
 namespace Yukihana.Vfs.Probe;
 
 internal sealed class FilesystemProber
 {
     private static readonly IFilesystemProbe[] s_filesystemProbes = [
+#if FEATURE_FS_FAT
         new FatProbe(),
+#endif
     ];
 
     public static bool ProbeFilesystem(Partition device, out FilesystemProbeResult result)
